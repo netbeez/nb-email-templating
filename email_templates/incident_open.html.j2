@@ -1,0 +1,26 @@
+{% extends "_base.html.j2" %}
+{% block title %}[NetBeez] Incident: {{ attributes.message }}{% endblock %}
+{% block content %}
+<style>
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .badge-incident { background-color: #f8d7da; color: #721c24; }
+  .detail-table { width: 100%; border-collapse: collapse; }
+  .detail-table td { padding: 12px 0; border-bottom: 1px solid #e9ecef; vertical-align: top; }
+  .detail-table tr:last-child td { border-bottom: none; }
+  .detail-label { font-weight: 500; color: #6c757d; font-size: 14px; width: 40%; }
+  .detail-value { color: #1a1a2e; text-align: right; }
+  .message-box { background: #fff5f5; border-left: 4px solid #c92a2a; padding: 14px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+  .message-box p { margin: 0; font-weight: 500; color: #1a1a2e; }
+  .btn { display: inline-block; padding: 12px 20px; background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); color: #fff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-top: 8px; }
+</style>
+<span class="badge badge-incident">Incident</span>
+<h2>Incident reported</h2>
+<div class="message-box">
+  <p>{{ attributes.message }}</p>
+</div>
+<table class="detail-table">
+  {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
+  {% if attributes.incident_ts %}<tr><td class="detail-label">Started</td><td class="detail-value">{{ (attributes.incident_ts / 1000) | int }}</td></tr>{% endif %}
+</table>
+{% if attributes.url %}<a href="{{ attributes.url }}" class="btn">View incident in NetBeez</a>{% endif %}
+{% endblock %}

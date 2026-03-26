@@ -1,0 +1,133 @@
+{% extends "layout.html.j2" %}
+{% block title %}Test tools - nb-email-templating{% endblock %}
+{% block content %}
+<h1>Test tools</h1>
+<section class="panel">
+  <h2>SMTP test</h2>
+  <form method="post" action="/test/smtp">
+    <label>To: <input id="smtp_to" type="email" name="to" required></label>
+    <button type="submit">Send test email</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Render preview</h2>
+  <form method="post" action="/test/render">
+    <label>To (used for Send test email): <input id="render_to" type="email" name="to"></label>
+    <label>Event type: <select id="event_type" name="event_type">
+      <option value="ALERT_OPEN">ALERT_OPEN</option>
+      <option value="ALERT_CLEARED">ALERT_CLEARED</option>
+      <option value="INCIDENT_OPEN">INCIDENT_OPEN</option>
+      <option value="INCIDENT_CLEARED">INCIDENT_CLEARED</option>
+    </select></label>
+    <label>Payload (JSON): <textarea id="payload" name="payload" rows="16">{
+  "data": {
+    "id": "test-alert-001",
+    "type": "alert",
+    "attributes": {
+      "event_type": "ALERT_OPEN",
+      "severity": 2,
+      "severity_name": "critical",
+      "agent": "NYC Agent 1",
+      "agent_description": "New York Office",
+      "target": "api.example.com",
+      "destination": "https://api.example.com/health",
+      "test_type": "http",
+      "message": "HTTP check failed with status 503",
+      "alert_ts": 1711626000000
+    }
+  }
+}</textarea></label>
+    <div>
+      <button type="submit" name="action" value="preview">Preview</button>
+      <button type="submit" name="action" value="send">Send test email</button>
+    </div>
+  </form>
+</section>
+<script>
+  (function () {
+    var eventType = document.getElementById("event_type");
+    var payload = document.getElementById("payload");
+    if (!eventType || !payload) return;
+
+    var payloadByEventType = {
+      ALERT_OPEN: `{
+  "data": {
+    "id": "test-alert-001",
+    "type": "alert",
+    "attributes": {
+      "event_type": "ALERT_OPEN",
+      "severity": 2,
+      "severity_name": "critical",
+      "agent": "NYC Agent 1",
+      "agent_description": "New York Office",
+      "target": "api.example.com",
+      "destination": "https://api.example.com/health",
+      "test_type": "http",
+      "message": "HTTP check failed with status 503",
+      "alert_ts": 1711626000000
+    }
+  }
+}`,
+      ALERT_CLEARED: `{
+  "data": {
+    "id": "test-alert-001",
+    "type": "alert",
+    "attributes": {
+      "event_type": "ALERT_CLEARED",
+      "severity": 2,
+      "severity_name": "critical",
+      "agent": "NYC Agent 1",
+      "destination": "https://api.example.com/health",
+      "message": "HTTP check to api.example.com has recovered",
+      "alert_ts": 1711629600000
+    }
+  }
+}`,
+      INCIDENT_OPEN: `{
+  "data": {
+    "id": "test-incident-044",
+    "type": "incident",
+    "attributes": {
+      "event": "INCIDENT_OPEN",
+      "incident_id": 44,
+      "agent": "London Agent 2",
+      "message": "Global API latency is above threshold",
+      "url": "https://app.netbeez.net/incidents/44",
+      "incident_ts": 1711630500000
+    }
+  }
+}`,
+      INCIDENT_CLEARED: `{
+  "data": {
+    "id": "test-incident-044",
+    "type": "incident",
+    "attributes": {
+      "event": "INCIDENT_CLEARED",
+      "incident_id": 44,
+      "agent": "London Agent 2",
+      "message": "Global API latency incident has been resolved",
+      "url": "https://app.netbeez.net/incidents/44",
+      "incident_ts": 1711630500000
+    }
+  }
+}`
+    };
+
+    eventType.addEventListener("change", function () {
+      payload.value = payloadByEventType[eventType.value] || payloadByEventType.ALERT_OPEN;
+    });
+
+    var smtpTo = document.getElementById("smtp_to");
+    var renderTo = document.getElementById("render_to");
+    if (smtpTo && renderTo) {
+      var syncFromSmtp = function () {
+        if (!renderTo.value) {
+          renderTo.value = smtpTo.value;
+        }
+      };
+      smtpTo.addEventListener("input", syncFromSmtp);
+      syncFromSmtp();
+    }
+  })();
+</script>
+{% endblock %}

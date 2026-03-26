@@ -1,0 +1,30 @@
+{% extends "_base.html.j2" %}
+{% block title %}[NetBeez] Alert: {{ attributes.message }}{% endblock %}
+{% block content %}
+<style>
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .badge-warning { background-color: #fff3cd; color: #856404; }
+  .badge-critical { background-color: #f8d7da; color: #721c24; }
+  .badge-info { background-color: #cce5ff; color: #004085; }
+  .detail-table { width: 100%; border-collapse: collapse; }
+  .detail-table td { padding: 12px 0; border-bottom: 1px solid #e9ecef; vertical-align: top; }
+  .detail-table tr:last-child td { border-bottom: none; }
+  .detail-label { font-weight: 500; color: #6c757d; font-size: 14px; width: 40%; }
+  .detail-value { color: #1a1a2e; text-align: right; }
+  .message-box { background: #fff8f0; border-left: 4px solid #e67e22; padding: 14px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+  .message-box p { margin: 0; font-weight: 500; color: #1a1a2e; }
+</style>
+<span class="badge badge-{% if attributes.severity and attributes.severity <= 2 %}critical{% else %}warning{% endif %}">Alert</span>
+<h2>New alert</h2>
+<div class="message-box">
+  <p>{{ attributes.message }}</p>
+</div>
+<table class="detail-table">
+  <tr><td class="detail-label">Severity</td><td class="detail-value">{{ attributes.severity_name or attributes.severity or '—' }}</td></tr>
+  {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
+  {% if attributes.target %}<tr><td class="detail-label">Target</td><td class="detail-value">{{ attributes.target }}</td></tr>{% endif %}
+  <tr><td class="detail-label">Destination</td><td class="detail-value">{{ attributes.destination or '—' }}</td></tr>
+  {% if attributes.test_type %}<tr><td class="detail-label">Test type</td><td class="detail-value">{{ attributes.test_type }}</td></tr>{% endif %}
+  {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ (attributes.alert_ts / 1000) | int }}</td></tr>{% endif %}
+</table>
+{% endblock %}

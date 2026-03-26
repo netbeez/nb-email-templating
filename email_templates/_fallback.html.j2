@@ -1,0 +1,16 @@
+{% extends "_base.html.j2" %}
+{% block title %}[NetBeez] Event: {{ event_type }}{% endblock %}
+{% block content %}
+<style>
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background-color: #e9ecef; color: #495057; }
+  .payload-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; font-family: ui-monospace, monospace; font-size: 13px; overflow-x: auto; }
+</style>
+<span class="badge">Event</span>
+<h2>{{ event_type }}</h2>
+<p style="margin: 0 0 16px 0; color: #6c757d;">Event ID: <code style="background: #f1f3f5; padding: 2px 6px; border-radius: 4px;">{{ event_id }}</code></p>
+{% if attributes %}
+<div class="payload-box">
+  <pre style="margin: 0; white-space: pre-wrap; word-break: break-word;">{{ attributes }}</pre>
+</div>
+{% endif %}
+{% endblock %}

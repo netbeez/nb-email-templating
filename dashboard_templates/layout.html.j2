@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}nb-email-templating{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <div class="app-header-inner">
+        <a class="app-brand" href="/">
+          <span class="app-brand-title">NetBeez Email Dashboard</span>
+          <span class="app-brand-subtitle">Kinetic Architect design system</span>
+        </a>
+        <nav class="top-nav">
+          <a href="/">Overview</a>
+          <a href="/events">Events</a>
+          <a href="/config">Config</a>
+          <a href="/templates">Templates</a>
+          <a href="/test">Test</a>
+          <a href="/health">Health</a>
+          <a class="nav-logout" href="/logout">Logout</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main class="app-main container">{% block content %}{% endblock %}</main>
+</body>
+</html>

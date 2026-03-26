@@ -1,0 +1,13 @@
+{% extends "layout.html.j2" %}
+{% block title %}Template editor - nb-email-templating{% endblock %}
+{% block content %}
+<h1>Template editor</h1>
+<section class="panel">
+  <p>Select a template to edit. Live preview available.</p>
+  <ul>
+    {% for name in template_names %}
+    <li><a href="/templates/{{ name }}">{{ name }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

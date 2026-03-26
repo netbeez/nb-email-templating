@@ -1,0 +1,92 @@
+# Example configuration for nb-email-templating
+# Use environment variables for secrets: ${VAR} or ${VAR:-default}
+
+server:
+  host: "0.0.0.0"
+  port: 8025
+  # Optional: URL Beezkeeper should call (shown on Overview). If unset, derived from how you open the dashboard.
+  # public_base_url: "https://email-service.example.com:8025"
+  shutdown_timeout_seconds: 30
+  max_request_size: 1048576  # 1 MB
+
+auth:
+  webhook_token: "${NB_EMAIL_WEBHOOK_TOKEN:-change-me}"
+  session_cookie_name: "nb_email_session"
+  session_max_age_seconds: 86400  # 24 hours
+
+smtp:
+  host: "smtp.example.com"
+  port: 587
+  starttls: true
+  username: "${SMTP_USERNAME:-}"
+  password: "${SMTP_PASSWORD:-}"
+  from_address: "NetBeez Alerts <alerts@netbeez.local>"
+  max_connections: 5
+
+dedup:
+  window_seconds: 3600
+
+data_retention:
+  days: 90
+  cleanup_hour: 3  # 0-23
+
+retry:
+  max_attempts: 3
+  backoff_base_seconds: 2
+  backoff_max_seconds: 60
+  recovery_timeout_seconds: 300
+
+rendering:
+  template_render_timeout_seconds: 5
+
+test_tools:
+  rate_limit_per_minute: 5
+
+templates:
+  ALERT_OPEN:
+    file: alert_open.html.j2
+    active: true
+    subject: "[NetBeez] Alert: {{ attributes.message }}"
+    recipients:
+      to: ["ops@example.com"]
+      cc: []
+      bcc: []
+  ALERT_CLEARED:
+    file: alert_cleared.html.j2
+    active: true
+    subject: "[NetBeez] Alert Cleared: {{ attributes.message }}"
+    recipients:
+      to: ["ops@example.com"]
+      cc: []
+      bcc: []
+  INCIDENT_OPEN:
+    file: incident_open.html.j2
+    active: true
+    subject: "[NetBeez] Incident: {{ attributes.message }}"
+    recipients:
+      to: ["ops@example.com"]
+      cc: []
+      bcc: []
+  INCIDENT_CLEARED:
+    file: incident_cleared.html.j2
+    active: true
+    subject: "[NetBeez] Incident Cleared: {{ attributes.message }}"
+    recipients:
+      to: ["ops@example.com"]
+      cc: []
+      bcc: []
+  _fallback:
+    file: _fallback.html.j2
+    active: true
+    subject: "[NetBeez] Event: {{ event_type }}"
+    recipients:
+      to: ["ops@example.com"]
+      cc: []
+      bcc: []
+
+logging:
+  path: "/app/logs"
+  max_bytes: 10485760  # 10 MB
+  backup_count: 5
+  level: "INFO"
+  format: "json"

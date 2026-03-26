@@ -1,0 +1,39 @@
+{% extends "layout.html.j2" %}
+{% block title %}Overview - nb-email-templating{% endblock %}
+{% block content %}
+<h1>Overview</h1>
+<section class="panel">
+  <h2>Beezkeeper webhook</h2>
+  <p class="panel-lead">Configure this URL in NetBeez Beezkeeper under <strong>Settings → Notification Integrations → Webhooks</strong>. Use the same URL for both <strong>alert</strong> (<code>Integrations::JsonApiAlertSerializer</code>) and <strong>incident</strong> (<code>Integrations::JsonApiIncidentSerializer</code>) webhooks.</p>
+  <label class="webhook-url-label" for="beezkeeper-webhook-url">Webhook URL (POST)</label>
+  <input id="beezkeeper-webhook-url" class="webhook-url-input" type="text" readonly value="{{ beezkeeper_webhook_url }}">
+  {% if not config.auth.webhook_token %}
+  <p class="panel-note">Set <code>auth.webhook_token</code> (or <code>NB_EMAIL_WEBHOOK_TOKEN</code>) so the URL includes a valid token.</p>
+  {% endif %}
+</section>
+<section class="panel">
+  <h2>Templates</h2>
+  <ul>
+    {% for name, entry in (templates_config or {}).items() %}
+    <li><strong>{{ name }}</strong>: {{ entry.get('file', '') }} (active: {{ entry.get('active', true) }})</li>
+    {% endfor %}
+  </ul>
+</section>
+<section class="panel">
+  <h2>Recent events</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Event ID</th><th>Type</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+    {% for ev in events %}
+    <tr>
+      <td>{{ ev.id }}</td>
+      <td>{{ ev.event_id[:20] }}...</td>
+      <td>{{ ev.event_type }}</td>
+      <td>{{ ev.status }}</td>
+      <td>{{ ev.created_at }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

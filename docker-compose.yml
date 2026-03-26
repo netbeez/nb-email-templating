@@ -1,0 +1,30 @@
+# Standalone deployment for nb-email-templating
+services:
+  nb-email-templating:
+    build: .
+    image: nb-email-templating:latest
+    container_name: nb-email-templating
+    ports:
+      - "8025:8025"
+    environment:
+      - NB_EMAIL_WEBHOOK_TOKEN=${NB_EMAIL_WEBHOOK_TOKEN:-change-me}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+    volumes:
+      - ./config:/app/config:ro
+      - ./email_templates:/app/email_templates
+      - email-data:/app/data
+      - email-logs:/app/logs
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8025/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  email-data:
+  email-logs:

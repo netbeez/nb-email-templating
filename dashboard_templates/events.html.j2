@@ -1,0 +1,24 @@
+{% extends "layout.html.j2" %}
+{% block title %}Events - nb-email-templating{% endblock %}
+{% block content %}
+<h1>Event history</h1>
+<section class="panel">
+  <table>
+    <thead><tr><th>ID</th><th>Event ID</th><th>Type</th><th>Status</th><th>Delivery</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for ev in events %}
+    <tr>
+      <td>{{ ev.id }}</td>
+      <td>{{ ev.event_id[:30] }}{% if ev.event_id | length > 30 %}...{% endif %}</td>
+      <td>{{ ev.event_type }}</td>
+      <td>{{ ev.status }}</td>
+      <td>{% for d in ev.deliveries %}{{ 'OK' if d.success else 'FAIL' }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      <td>{{ ev.created_at }}</td>
+      <td>{% if ev.status == 'failed' %}<form method="post" action="/events/{{ ev.id }}/retry" class="inline-form"><button type="submit">Retry</button></form>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="meta">Page {{ page }} ({{ per_page }} per page)</p>
+</section>
+{% endblock %}
