@@ -20,7 +20,7 @@ services:
       - SSL_CERTFILE=${SSL_CERTFILE:-/app/certs/netbeez.crt}
       - SSL_KEYFILE=${SSL_KEYFILE:-/app/certs/netbeez.key}
     volumes:
-      - ./config:/app/config:ro
+      - ./config:/app/config
       - ./email_templates:/app/email_templates
       - email-data:/app/data
       - email-logs:/app/logs

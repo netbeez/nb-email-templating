@@ -365,6 +365,12 @@ iframe {
   tab-size: 2;
 }
 
+.subject-field {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
 .status-ok {
   color: #0a7f3f;
 }
