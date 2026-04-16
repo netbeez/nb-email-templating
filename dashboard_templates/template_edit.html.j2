@@ -8,6 +8,15 @@
     {% if event_type %}
     <label for="subject-editor">Subject line ({{ event_type }})</label>
     <input id="subject-editor" class="subject-field" type="text" value="{{ subject or '' }}">
+    <div class="recipients-section">
+      <h3>Recipients</h3>
+      <label for="recipients-to">To</label>
+      <input id="recipients-to" class="recipients-field" type="text" value="{{ (recipients.get('to') or []) | join(', ') }}" placeholder="alice@example.com, bob@example.com">
+      <label for="recipients-cc">CC</label>
+      <input id="recipients-cc" class="recipients-field" type="text" value="{{ (recipients.get('cc') or []) | join(', ') }}" placeholder="team@example.com">
+      <label for="recipients-bcc">BCC</label>
+      <input id="recipients-bcc" class="recipients-field" type="text" value="{{ (recipients.get('bcc') or []) | join(', ') }}" placeholder="audit@example.com">
+    </div>
     {% else %}
     <p class="panel-note">This file is not mapped to an event type, so there is no editable subject line.</p>
     {% endif %}
@@ -15,6 +24,9 @@
     <div style="margin-top:10px;">
       <button id="btn-save">Save</button>
       <button id="btn-preview">Preview</button>
+      {% if event_type %}
+      <button id="btn-apply-recipients">Apply recipients to all templates</button>
+      {% endif %}
       <span id="status" style="margin-left:12px;"></span>
     </div>
   </section>
@@ -33,6 +45,9 @@
   var status = document.getElementById('status');
   var previewFrame = document.getElementById('preview-frame');
   var previewSubject = document.getElementById('preview-subject');
+  var recipientsTo = document.getElementById('recipients-to');
+  var recipientsCc = document.getElementById('recipients-cc');
+  var recipientsBcc = document.getElementById('recipients-bcc');
 
   function getToken() {
     var m = location.search.match(/[?&]token=([^&]+)/);
@@ -42,13 +57,31 @@
     var t = getToken();
     return path + (t ? '?token=' + encodeURIComponent(t) : '');
   }
+  function parseRecipientsValue(value) {
+    if (!value) return [];
+    return value.split(',').map(function(part) { return part.trim(); }).filter(function(part) { return part.length > 0; });
+  }
+  function getRecipientsPayload() {
+    if (!recipientsTo && !recipientsCc && !recipientsBcc) {
+      return null;
+    }
+    return {
+      to: parseRecipientsValue(recipientsTo ? recipientsTo.value : ''),
+      cc: parseRecipientsValue(recipientsCc ? recipientsCc.value : ''),
+      bcc: parseRecipientsValue(recipientsBcc ? recipientsBcc.value : '')
+    };
+  }
 
   document.getElementById('btn-save').addEventListener('click', function() {
     status.textContent = 'Saving…';
     fetch(apiUrl('/api/templates/' + encodeURIComponent(name)), {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: editor.value, subject: subjectEditor ? subjectEditor.value : null})
+      body: JSON.stringify({
+        content: editor.value,
+        subject: subjectEditor ? subjectEditor.value : null,
+        recipients: getRecipientsPayload()
+      })
     }).then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
       .then(function(res) {
         status.textContent = res.ok ? 'Saved.' : ('Error: ' + (res.data.detail || 'unknown'));
@@ -56,6 +89,28 @@
       })
       .catch(function(e) { status.textContent = 'Error: ' + e; status.className = 'status-error'; });
   });
+
+  var applyRecipientsButton = document.getElementById('btn-apply-recipients');
+  if (applyRecipientsButton) {
+    applyRecipientsButton.addEventListener('click', function() {
+      status.textContent = 'Applying recipients to all templates…';
+      fetch(apiUrl('/api/templates/' + encodeURIComponent(name) + '/apply-recipients'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({recipients: getRecipientsPayload()})
+      }).then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
+        .then(function(res) {
+          if (res.ok) {
+            status.textContent = 'Recipients applied to: ' + (res.data.applied_to || []).join(', ');
+            status.className = 'status-ok';
+          } else {
+            status.textContent = 'Error: ' + (res.data.detail || 'unknown');
+            status.className = 'status-error';
+          }
+        })
+        .catch(function(e) { status.textContent = 'Error: ' + e; status.className = 'status-error'; });
+    });
+  }
 
   function buildSamplePayload(templateName) {
     var base = templateName.replace('.html.j2', '');

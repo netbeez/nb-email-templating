@@ -13,9 +13,22 @@
 </section>
 <section class="panel">
   <h2>Templates</h2>
-  <ul>
+  <ul class="template-list">
     {% for name, entry in (templates_config or {}).items() %}
-    <li><strong>{{ name }}</strong>: {{ entry.get('file', '') }} (active: {{ entry.get('active', true) }})</li>
+    <li class="template-list-item">
+      <div>
+        <strong>{{ name }}</strong>: {{ entry.get('file', '') }}
+      </div>
+      <label class="toggle-switch" title="Enable or disable {{ name }}">
+        <input
+          type="checkbox"
+          class="template-active-toggle"
+          data-event-type="{{ name }}"
+          {% if entry.get('active', true) %}checked{% endif %}
+        >
+        <span class="toggle-slider"></span>
+      </label>
+    </li>
     {% endfor %}
   </ul>
 </section>
@@ -36,4 +49,37 @@
     </tbody>
   </table>
 </section>
+<script>
+(function() {
+  function getToken() {
+    var m = location.search.match(/[?&]token=([^&]+)/);
+    return m ? m[1] : '';
+  }
+  function apiUrl(path) {
+    var t = getToken();
+    return path + (t ? '?token=' + encodeURIComponent(t) : '');
+  }
+  document.querySelectorAll('.template-active-toggle').forEach(function(toggle) {
+    toggle.addEventListener('change', function() {
+      var requested = !!toggle.checked;
+      var eventType = toggle.getAttribute('data-event-type');
+      fetch(apiUrl('/api/templates/' + encodeURIComponent(eventType) + '/toggle-active'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({active: requested})
+      }).then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
+        .then(function(res) {
+          if (!res.ok) {
+            toggle.checked = !requested;
+            alert('Failed to update template state: ' + (res.data.detail || 'unknown'));
+          }
+        })
+        .catch(function() {
+          toggle.checked = !requested;
+          alert('Failed to update template state due to a network error.');
+        });
+    });
+  });
+})();
+</script>
 {% endblock %}
