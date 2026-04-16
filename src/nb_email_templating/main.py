@@ -27,6 +27,10 @@ if not Path(CONFIG_PATH).exists():
     CONFIG_PATH = str(_root / "config" / "config.example.yaml")
 TEMPLATES_DIR = os.environ.get("EMAIL_TEMPLATES_DIR") or str(_root / "email_templates")
 DATA_DIR = os.environ.get("DATA_DIR", str(_root / "data"))
+JINJA2_BYTECODE_CACHE_DIR = os.environ.get(
+    "JINJA2_BYTECODE_CACHE_DIR",
+    str(Path(DATA_DIR) / ".jinja2_cache"),
+)
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite+aiosqlite:///{Path(DATA_DIR).resolve()}/events.db")
 
 _app_config: AppConfig | None = None
@@ -85,6 +89,7 @@ async def startup():
     Path(_app_config.logging.path).mkdir(parents=True, exist_ok=True)
     Path(TEMPLATES_DIR).mkdir(parents=True, exist_ok=True)
     Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+    Path(JINJA2_BYTECODE_CACHE_DIR).mkdir(parents=True, exist_ok=True)
     engine = get_engine(DATABASE_URL)
     await init_db(engine)
     session_factory = get_session_factory(engine)
@@ -96,9 +101,11 @@ async def startup():
     template_config = {k: v for k, v in _app_config.templates.items()}
     app.state.renderer = TemplateRenderer(
         TEMPLATES_DIR,
+        bytecode_cache_dir=JINJA2_BYTECODE_CACHE_DIR,
         render_timeout_seconds=_app_config.rendering.template_render_timeout_seconds,
         template_config=template_config,
     )
+    app.state.jinja2_bytecode_cache_dir = JINJA2_BYTECODE_CACHE_DIR
     app.state.sessions = {}
     app.state.reload_lock = asyncio.Lock()
     app.state.email_templates_dir = TEMPLATES_DIR

@@ -1,5 +1,6 @@
 """Admin: config/template reload with validate-before-apply and read-write lock."""
 
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, Request, Depends, HTTPException
@@ -53,8 +54,13 @@ async def admin_reload(request: Request, _=Depends(_require_auth), __=Depends(_r
             raise HTTPException(status_code=400, detail="Template directory not found")
         request.app.state.config = new_config
         from .renderer import TemplateRenderer
+
+        bytecode_cache_dir = getattr(request.app.state, "jinja2_bytecode_cache_dir", None)
+        if bytecode_cache_dir is None:
+            bytecode_cache_dir = str(Path(os.environ.get("DATA_DIR", "/app/data")) / ".jinja2_cache")
         request.app.state.renderer = TemplateRenderer(
             templates_dir,
+            bytecode_cache_dir=bytecode_cache_dir,
             render_timeout_seconds=new_config.rendering.template_render_timeout_seconds,
             template_config={k: v for k, v in new_config.templates.items()},
         )

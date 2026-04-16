@@ -130,6 +130,11 @@ async def webhook_post(request: Request) -> Response:
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         return JSONResponse(status_code=400, content={"error": "Invalid JSON", "detail": str(e)})
 
+    # NetBeez dashboard connectivity checks may POST JSON without a `data` member.
+    if "data" not in payload or payload.get("data") is None:
+        logger.info("Webhook accepted with no 'data' (connectivity test); skipping persist and delivery")
+        return Response(status_code=200, content=b"")
+
     try:
         parsed = parse_webhook_payload(payload)
     except ValueError as e:

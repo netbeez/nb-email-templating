@@ -1,7 +1,12 @@
 # Standalone deployment for nb-email-templating
 services:
   nb-email-templating:
-    build: .
+    # Local tag only; do not pull `nb-email-templating` from a registry.
+    pull_policy: build
+    build:
+      context: .
+      # Fixes pip "Temporary failure in name resolution" when build containers cannot use the host stub resolver (e.g. 127.0.0.53). Linux.
+      network: host
     image: nb-email-templating:latest
     container_name: nb-email-templating
     ports:
@@ -10,16 +15,21 @@ services:
       - NB_EMAIL_WEBHOOK_TOKEN=${NB_EMAIL_WEBHOOK_TOKEN:-change-me}
       - SMTP_USERNAME=${SMTP_USERNAME:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - UVICORN_PORT=8025
+      # When both files exist inside the container, uvicorn serves HTTPS on UVICORN_PORT.
+      - SSL_CERTFILE=${SSL_CERTFILE:-/app/certs/netbeez.crt}
+      - SSL_KEYFILE=${SSL_KEYFILE:-/app/certs/netbeez.key}
     volumes:
       - ./config:/app/config:ro
       - ./email_templates:/app/email_templates
       - email-data:/app/data
       - email-logs:/app/logs
+      - ${NETBEEZ_TLS_SECRETS_DIR:-/opt/netbeez/user_data/secrets}:/app/certs:ro
     env_file:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8025/health')"]
+      test: ["CMD", "python", "/app/healthcheck.py"]
       interval: 30s
       timeout: 10s
       retries: 3
