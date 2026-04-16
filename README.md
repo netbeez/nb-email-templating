@@ -52,6 +52,7 @@ See `config/config.example.yaml` for all options. Main sections:
 - **rendering**: template render timeout.
 - **test_tools**: rate limit per minute.
 - **logging**: log directory, rotation (`max_bytes`, `backup_count`), level, format (e.g. JSON).
+- **template_context**: optional string key/value map merged into every email render context (e.g. `staff_sop_url`, `netbeez_dashboard_url`). The dashboard footer and incident buttons can use these; `netbeez_dashboard_url` also drives the `rewrite_url_origin` Jinja filter to swap the NetBeez host in `attributes.url`.
 - **templates**: per-event-type file, subject, recipients (to/cc/bcc), active flag.
 
 Environment variable resolution: `${VAR}` and `${VAR:-default}` are replaced from the environment before Pydantic validation. Missing required vars (no default) cause startup failure.
@@ -78,7 +79,9 @@ Payloads follow JSON:API from nb-api:
 - **Aggregate alerts**: `{ "data": [ { "id", "type": "alert", "attributes": { ... } }, ... ] }`
 - **Incident**: `{ "data": { "id", "type": "incident", "attributes": { "event", "message", "url", "incident_ts", ... } } }`
 
-Templates receive `event_type`, `event_id`, `data_type`, `attributes`, and `alerts` (list; one item for single alert). All `*_ts` fields are milliseconds since epoch.
+Templates receive `event_type`, `event_id`, `data_type`, `attributes`, and `alerts` (list; one item for single alert/incident). For aggregate alert payloads (`data` as an array), `attributes` matches the first alert, `aggregate_count` is the array length, and `is_aggregate` is true when more than one alert is present. Keys from `template_context` in config are merged into the same context. All `*_ts` fields are milliseconds since epoch.
+
+Incident templates can render a **tests** table when `attributes.tests` is present and is a list (shape depends on your NetBeez incident serializer; if the webhook does not include that array, only the summary rows and message will appear).
 
 ## Email template customization
 

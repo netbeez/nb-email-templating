@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from .mailer import send_email
 from .parser import parse_webhook_payload
+from .context import build_render_context
 
 router = APIRouter()
 
@@ -119,13 +120,8 @@ async def test_render(request: Request, _=Depends(_require_auth)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     renderer = request.app.state.renderer
-    context = {
-        "event_type": parsed.get("event_type", event_type),
-        "event_id": parsed.get("event_id"),
-        "data_type": parsed.get("data_type"),
-        "attributes": parsed.get("attributes") or {},
-        "alerts": parsed.get("alerts") or [],
-    }
+    cfg = request.app.state.config
+    context = build_render_context(parsed, cfg.template_context)
     html, err = await renderer.render_body(context["event_type"], context)
     subject = renderer.render_subject(context["event_type"], context)
     if action == "send":

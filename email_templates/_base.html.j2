@@ -83,6 +83,12 @@
       </div>
       <div class="footer">
         <p>This is an automated notification from NetBeez. You received this because you are subscribed to alert or incident notifications.</p>
+        {% if netbeez_dashboard_url %}
+        <p style="margin-top:12px;">View the Dashboard at <a href="{{ netbeez_dashboard_url }}">{{ netbeez_dashboard_url }}</a></p>
+        {% endif %}
+        {% if staff_sop_url %}
+        <p style="margin-top:12px;"><a href="{{ staff_sop_url }}">Staff troubleshooting (SOP)</a></p>
+        {% endif %}
       </div>
     </div>
   </div>

@@ -42,11 +42,16 @@ rendering:
 test_tools:
   rate_limit_per_minute: 5
 
+# Optional: merged into every email Jinja context (footer links, SOP, friendly NetBeez hostname).
+template_context:
+  staff_sop_url: "" # e.g. "https://intranet.example/runbooks/netbeez-alerts"
+  netbeez_dashboard_url: "" # e.g. "https://nbz.example.com" (shown in footer; also rewrites incident links when set)
+
 templates:
   ALERT_OPEN:
     file: alert_open.html.j2
     active: true
-    subject: "[NetBeez] Alert: {{ attributes.message }}"
+    subject: "{% if attributes.target %}[NB] - Target Alert - Target: {{ attributes.target }} - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% elif is_aggregate %}[NB] - Agent Aggregate Alert - Count: {{ aggregate_count }} - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% else %}[NB] - Agent Alert - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% endif %}"
     recipients:
       to: ["ops@example.com"]
       cc: []
@@ -54,7 +59,7 @@ templates:
   ALERT_CLEARED:
     file: alert_cleared.html.j2
     active: true
-    subject: "[NetBeez] Alert Cleared: {{ attributes.message }}"
+    subject: "{% if attributes.target %}[NB] - Target Alert - Target: {{ attributes.target }} - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% elif is_aggregate %}[NB] - Agent Aggregate Alert Cleared - Count: {{ aggregate_count }} - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% else %}[NB] - Agent Alert - Source: {{ attributes.agent }} - Message: {{ attributes.message }}{% endif %}"
     recipients:
       to: ["ops@example.com"]
       cc: []
@@ -62,7 +67,7 @@ templates:
   INCIDENT_OPEN:
     file: incident_open.html.j2
     active: true
-    subject: "[NetBeez] Incident: {{ attributes.message }}"
+    subject: "[NB] - Agent Incident Detected{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %} on {{ attributes.agent }}"
     recipients:
       to: ["ops@example.com"]
       cc: []
@@ -70,7 +75,7 @@ templates:
   INCIDENT_CLEARED:
     file: incident_cleared.html.j2
     active: true
-    subject: "[NetBeez] Incident Cleared: {{ attributes.message }}"
+    subject: "[NB] - Agent Incident Closed{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %} on {{ attributes.agent }}"
     recipients:
       to: ["ops@example.com"]
       cc: []
@@ -78,7 +83,7 @@ templates:
   _fallback:
     file: _fallback.html.j2
     active: true
-    subject: "[NetBeez] Event: {{ event_type }}"
+    subject: "[NB] - Event: {{ event_type }}"
     recipients:
       to: ["ops@example.com"]
       cc: []

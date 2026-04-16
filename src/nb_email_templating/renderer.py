@@ -3,13 +3,37 @@
 import asyncio
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 
-from jinja2 import FileSystemBytecodeCache, FileSystemLoader, TemplateNotFound, UndefinedError
+from jinja2 import FileSystemBytecodeCache, FileSystemLoader, TemplateNotFound, UndefinedError, pass_context
 from jinja2.exceptions import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 
 
 DEFAULT_SUBJECT_FALLBACK = "[NetBeez] {event_type} Notification"
+
+
+def _rewrite_url_origin(url: str, new_origin: str) -> str:
+    """Replace scheme/host of url with the origin from new_origin (e.g. configured friendly NetBeez hostname)."""
+    if not url or not (new_origin or "").strip():
+        return url or ""
+    u = urlparse(url.strip())
+    o = new_origin.strip()
+    if "://" not in o:
+        o = "https://" + o
+    b = urlparse(o)
+    if not b.netloc:
+        return url
+    scheme = b.scheme or u.scheme or "https"
+    return urlunparse((scheme, b.netloc, u.path or "", u.params, u.query, u.fragment))
+
+
+@pass_context
+def _rewrite_url_origin_filter(context: Any, url: Any) -> str:
+    if url is None:
+        return ""
+    base = context.get("netbeez_dashboard_url") or ""
+    return _rewrite_url_origin(str(url), base)
 
 
 class TemplateRenderer:
@@ -30,6 +54,7 @@ class TemplateRenderer:
             bytecode_cache=FileSystemBytecodeCache(str(cache_dir)),
             auto_reload=False,
         )
+        self.env.filters["rewrite_url_origin"] = _rewrite_url_origin_filter
 
     def _render_sync(self, template_name: str, context: dict[str, Any]) -> str:
         template = self.env.get_template(template_name)

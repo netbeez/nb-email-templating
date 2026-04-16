@@ -118,6 +118,10 @@ class AppConfig(BaseModel):
     test_tools: TestToolsConfig = Field(default_factory=TestToolsConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     templates: dict[str, TemplateEntryConfig] = Field(default_factory=dict)
+    template_context: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional key/value pairs merged into every email Jinja context (e.g. staff_sop_url, netbeez_dashboard_url).",
+    )
 
 
 def load_config(path: str | Path) -> AppConfig:

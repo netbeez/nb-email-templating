@@ -1,5 +1,5 @@
 {% extends "_base.html.j2" %}
-{% block title %}[NetBeez] Incident Cleared{% endblock %}
+{% block title %}[NB] Agent Incident Cleared{% endblock %}
 {% block content %}
 <style>
   .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
@@ -20,7 +20,21 @@
 </div>
 <table class="detail-table">
   {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
+  {% if attributes.test_type %}<tr><td class="detail-label">Test type</td><td class="detail-value">{{ attributes.test_type }}</td></tr>{% endif %}
+  {% if attributes.target %}<tr><td class="detail-label">Target</td><td class="detail-value">{{ attributes.target }}</td></tr>{% endif %}
   {% if attributes.incident_ts %}<tr><td class="detail-label">Original start</td><td class="detail-value">{{ (attributes.incident_ts / 1000) | int }}</td></tr>{% endif %}
 </table>
-{% if attributes.url %}<a href="{{ attributes.url }}" class="btn">View incident in NetBeez</a>{% endif %}
+{% if attributes.tests is defined and attributes.tests is iterable and attributes.tests is not string %}
+<table class="detail-table" style="margin-top:16px;">
+  <tr><td colspan="2" class="detail-label" style="border-bottom:none;padding-bottom:4px;">Tests in this incident</td></tr>
+  {% for t in attributes.tests %}
+  <tr>
+    <td class="detail-label">{% if t is mapping %}{{ t.name or t.target or t.destination or ('Test ' ~ loop.index) }}{% else %}{{ t }}{% endif %}</td>
+    <td class="detail-value">{% if t is mapping %}{{ t.status or t.state or t.message or '—' }}{% else %}—{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% set incident_link = attributes.url | default('', true) | rewrite_url_origin %}
+{% if incident_link %}<a href="{{ incident_link }}" class="btn">View incident in NetBeez</a>{% endif %}
 {% endblock %}

@@ -15,6 +15,7 @@ from .dedup import try_insert_event
 from .parser import parse_webhook_payload
 from .renderer import TemplateRenderer
 from .mailer import send_email
+from .context import build_render_context
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -45,13 +46,7 @@ async def _deliver_event(
             await session.commit()
 
         event_type = parsed.get("event_type") or "_fallback"
-        context = {
-            "event_type": event_type,
-            "event_id": parsed.get("event_id"),
-            "data_type": parsed.get("data_type"),
-            "attributes": parsed.get("attributes") or {},
-            "alerts": parsed.get("alerts") or [],
-        }
+        context = build_render_context(parsed, config.template_context)
         subject = renderer.render_subject(event_type, context)
         body_html, render_error = await renderer.render_body(event_type, context)
         if body_html is None or (not body_html and render_error):

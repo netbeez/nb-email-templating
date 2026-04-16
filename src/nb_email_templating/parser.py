@@ -59,9 +59,11 @@ def _normalize_attributes(raw: dict[str, Any]) -> dict[str, Any]:
 def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
     """
     Parse JSON:API payload and return normalized structure for rendering.
-    Returns dict with: event_id, event_type, data_type, attributes, alerts (list for template).
+    Returns dict with: event_id, event_type, data_type, attributes, alerts (list for template),
+    is_aggregate (True when data was an array with more than one alert), aggregate_count.
     For single alert/incident: alerts has one element (attributes-style).
-    For aggregate alerts: alerts is list of attribute dicts; event_id is hash of sorted ids.
+    For aggregate alerts: alerts is list of attribute dicts; attributes mirrors the first alert;
+    event_id is hash of sorted ids.
     """
     data = body.get("data")
     if data is None:
@@ -73,6 +75,7 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("Payload 'data' array is empty")
         ids = []
         alerts_list = []
+        event_type: str | None = None
         for item in data:
             if not isinstance(item, dict):
                 raise ValueError("Aggregate data item is not an object")
@@ -81,16 +84,21 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
                 raise ValueError("Aggregate alert missing 'id'")
             ids.append(str(id_val))
             attrs = _normalize_attributes(item.get("attributes") or {})
-            # Derive event_type from first alert
-            event_type = attrs.get("event_type") or "ALERT_OPEN"
-            alerts_list.append({"id": id_val, "attributes": attrs, "event_type": event_type})
+            et = attrs.get("event_type") or "ALERT_OPEN"
+            if event_type is None:
+                event_type = et
+            alerts_list.append({"id": id_val, "attributes": attrs, "event_type": et})
+        event_type = event_type or "ALERT_OPEN"
         event_id = hashlib.sha256("|".join(sorted(ids)).encode()).hexdigest()
+        n = len(alerts_list)
         return {
             "event_id": event_id,
             "event_type": event_type,
             "data_type": "alert",
-            "attributes": alerts_list[0]["attributes"] if len(alerts_list) == 1 else {},
+            "attributes": alerts_list[0]["attributes"],
             "alerts": [a["attributes"] for a in alerts_list],
+            "is_aggregate": n > 1,
+            "aggregate_count": n,
         }
 
     # Single object
@@ -111,6 +119,8 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             "data_type": "alert",
             "attributes": attributes,
             "alerts": [attributes],
+            "is_aggregate": False,
+            "aggregate_count": 1,
         }
     if data_type == "incident":
         event_type = attributes.get("event") or "INCIDENT_OPEN"
@@ -120,5 +130,7 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             "data_type": "incident",
             "attributes": attributes,
             "alerts": [attributes],
+            "is_aggregate": False,
+            "aggregate_count": 1,
         }
     raise ValueError(f"Unknown data type: {data_type}")

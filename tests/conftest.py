@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from starlette.testclient import TestClient
 
 # Use example config for tests (env defaults avoid missing vars)
 os.environ.setdefault("NB_EMAIL_WEBHOOK_TOKEN", "test-token")
@@ -28,15 +28,13 @@ def database_url(data_dir):
 
 
 @pytest.fixture
-async def client(config_path, data_dir, database_url):
-    """FastAPI test client with overridden config and DB paths."""
+def client(config_path, data_dir, database_url):
+    """FastAPI test client with overridden config and DB paths (runs ASGI lifespan)."""
     os.environ["CONFIG_PATH"] = config_path
     os.environ["DATA_DIR"] = data_dir
     os.environ["DATABASE_URL"] = database_url
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     from nb_email_templating.main import app
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as ac:
-        yield ac
+
+    with TestClient(app) as tc:
+        yield tc
