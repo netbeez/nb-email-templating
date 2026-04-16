@@ -5,6 +5,12 @@
 <p><a href="/templates">&larr; Back to templates</a></p>
 <div id="editor-wrap" class="split">
   <section class="panel">
+    {% if event_type %}
+    <label for="subject-editor">Subject line ({{ event_type }})</label>
+    <input id="subject-editor" class="subject-field" type="text" value="{{ subject or '' }}">
+    {% else %}
+    <p class="panel-note">This file is not mapped to an event type, so there is no editable subject line.</p>
+    {% endif %}
     <textarea id="editor" class="editor-area" rows="30">{{ content }}</textarea>
     <div style="margin-top:10px;">
       <button id="btn-save">Save</button>
@@ -14,6 +20,7 @@
   </section>
   <section class="panel">
     <h3>Preview</h3>
+    <p id="preview-subject" class="panel-note"></p>
     <iframe id="preview-frame" style="width:100%; height:500px; border:0; border-radius:10px;"></iframe>
   </section>
 </div>
@@ -22,8 +29,10 @@
 (function() {
   var name = {{ name | tojson }};
   var editor = document.getElementById('editor');
+  var subjectEditor = document.getElementById('subject-editor');
   var status = document.getElementById('status');
   var previewFrame = document.getElementById('preview-frame');
+  var previewSubject = document.getElementById('preview-subject');
 
   function getToken() {
     var m = location.search.match(/[?&]token=([^&]+)/);
@@ -39,7 +48,7 @@
     fetch(apiUrl('/api/templates/' + encodeURIComponent(name)), {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: editor.value})
+      body: JSON.stringify({content: editor.value, subject: subjectEditor ? subjectEditor.value : null})
     }).then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
       .then(function(res) {
         status.textContent = res.ok ? 'Saved.' : ('Error: ' + (res.data.detail || 'unknown'));
@@ -90,9 +99,11 @@
       .then(function(d) {
         if (d.html) {
           previewFrame.srcdoc = d.html;
+          previewSubject.textContent = d.subject ? ('Subject: ' + d.subject) : '';
           status.textContent = d.error ? 'Preview (with warning): ' + d.error : 'Preview rendered.';
           status.className = d.error ? 'status-warn' : 'status-ok';
         } else {
+          previewSubject.textContent = '';
           status.textContent = 'Preview error: ' + (d.error || d.detail || 'empty');
           status.className = 'status-error';
         }
