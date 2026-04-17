@@ -116,6 +116,14 @@ async def template_editor_page(request: Request, _=Depends(_require_auth)):
     return HTMLResponse(template.render(template_names=names))
 
 
+@router.get("/templates/legend", response_class=HTMLResponse)
+async def template_legend_page(request: Request, _=Depends(_require_auth)):
+    from jinja2 import Environment, FileSystemLoader
+    env = Environment(loader=FileSystemLoader(os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(Path(__file__).parent.parent.parent / "dashboard_templates")))
+    template = env.get_template("template_legend.html.j2")
+    return HTMLResponse(template.render(event_type=None))
+
+
 @router.get("/templates/{name}", response_class=HTMLResponse)
 async def template_edit_page(request: Request, name: str, _=Depends(_require_auth)):
     if not validate_template_name(name):

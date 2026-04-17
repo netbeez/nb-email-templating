@@ -3,6 +3,15 @@
 {% block content %}
 <h1>Edit <code>{{ name }}</code></h1>
 <p><a href="/templates">&larr; Back to templates</a></p>
+<section class="panel variable-legend">
+  <details class="legend" id="template-legend">
+    <summary>
+      <span>Template variables reference</span>
+      <button type="button" id="btn-popout-legend" class="legend-popout-btn" title="Open in new window">Pop out</button>
+    </summary>
+    {% include "_template_legend.html.j2" %}
+  </details>
+</section>
 <div id="editor-wrap" class="split">
   <section class="panel">
     {% if event_type %}
@@ -57,6 +66,18 @@
     var t = getToken();
     return path + (t ? '?token=' + encodeURIComponent(t) : '');
   }
+
+  var legendPopoutButton = document.getElementById('btn-popout-legend');
+  if (legendPopoutButton) {
+    legendPopoutButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var t = getToken();
+      var url = '/templates/legend' + (t ? ('?token=' + encodeURIComponent(t)) : '');
+      window.open(url, 'nb-template-legend', 'width=820,height=900,resizable=yes,scrollbars=yes,noopener');
+    });
+  }
+
   function parseRecipientsValue(value) {
     if (!value) return [];
     return value.split(',').map(function(part) { return part.trim(); }).filter(function(part) { return part.length > 0; });

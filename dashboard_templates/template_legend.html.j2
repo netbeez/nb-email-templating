@@ -1,0 +1,10 @@
+{% extends "layout.html.j2" %}
+{% block title %}Template variables reference - nb-email-templating{% endblock %}
+{% block content %}
+<h1>Template variables reference</h1>
+<p class="panel-lead">Context and attributes available to every email template rendered by this service.</p>
+<section class="panel variable-legend variable-legend--popout">
+  {% set legend_expand_all = true %}
+  {% include "_template_legend.html.j2" %}
+</section>
+{% endblock %}

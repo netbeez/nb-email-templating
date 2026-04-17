@@ -1,0 +1,199 @@
+{% set event_type_value = event_type or '' %}
+{% set is_alert_template = 'ALERT' in event_type_value %}
+{% set is_incident_template = 'INCIDENT' in event_type_value %}
+{% set open_all_sections = legend_expand_all | default(false) %}
+<div class="legend-content">
+  {% if event_type %}
+  <p class="legend-context-banner">This template handles <strong>{{ event_type }}</strong> events.</p>
+  {% else %}
+  <p class="legend-context-banner">Reference for all webhook event types and template context fields.</p>
+  {% endif %}
+
+  <details open>
+    <summary>Top-level context</summary>
+    <p class="panel-note">Available in every template render from webhook payload parsing plus configured <code>template_context</code> keys.</p>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Type</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>event_type</code></td><td>string</td><td>Examples: <code>ALERT_OPEN</code>, <code>ALERT_CLEARED</code>, <code>INCIDENT_OPEN</code>, <code>INCIDENT_CLEARED</code>.</td></tr>
+        <tr><td><code>event_id</code></td><td>string</td><td>Envelope event id from webhook payload.</td></tr>
+        <tr><td><code>data_type</code></td><td>string</td><td><code>alert</code> or <code>incident</code>.</td></tr>
+        <tr><td><code>attributes</code></td><td>object</td><td>Primary event attributes for this payload.</td></tr>
+        <tr><td><code>alerts</code></td><td>list[object]</td><td>Populated for aggregate alert payloads.</td></tr>
+        <tr><td><code>is_aggregate</code></td><td>bool</td><td><code>true</code> when the incoming payload contains <code>data</code> as an array.</td></tr>
+        <tr><td><code>aggregate_count</code></td><td>int</td><td>Number of alerts in aggregate payload (defaults to <code>1</code>).</td></tr>
+        <tr><td><code>staff_sop_url</code> etc.</td><td>any</td><td>Any additional keys from config <code>template_context</code> are merged in.</td></tr>
+      </tbody>
+    </table>
+    <p class="panel-note">All timestamp keys ending in <code>_ts</code> are Unix epoch <strong>milliseconds</strong>.</p>
+  </details>
+
+  <details{% if open_all_sections or is_alert_template %} open{% endif %}>
+    <summary>Alert attributes</summary>
+    <p class="panel-note">Alert lifecycle: openers emit <code>event_type=ALERT_OPEN</code>; clearers emit <code>event_type=ALERT_CLEARED</code> with matching <code>alert_dedup_id</code>.</p>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Type</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>severity</code></td><td>int</td><td><code>&lt;=5</code> open alert, <code>&gt;5</code> cleared.</td></tr>
+        <tr><td><code>severity_name</code></td><td>string</td><td>Human label (<code>alert</code>, <code>critical</code>, <code>informational</code>).</td></tr>
+        <tr><td><code>alert_dedup_id</code></td><td>int|string</td><td>Stable correlation id between open/cleared alert pair.</td></tr>
+        <tr><td><code>event_type</code></td><td>string</td><td><code>ALERT_OPEN</code> or <code>ALERT_CLEARED</code>.</td></tr>
+        <tr><td><code>message</code></td><td>string</td><td>Alert text for email body/subject rendering.</td></tr>
+        <tr><td><code>alert_ts</code></td><td>int</td><td>Epoch milliseconds.</td></tr>
+        <tr><td><code>agent</code>, <code>agent_description</code></td><td>string</td><td>Agent context when available.</td></tr>
+        <tr><td><code>target</code></td><td>string</td><td>Target display name when applicable.</td></tr>
+        <tr><td><code>wifi_profile</code></td><td>string</td><td>WiFi profile name for WiFi-scoped alerts.</td></tr>
+        <tr><td><code>destination</code></td><td>string|null</td><td>Destination host/IP or formatted scheduled target.</td></tr>
+        <tr><td><code>test_type</code></td><td>string|null</td><td>May be <code>null</code> for agent device/scheduled alerts.</td></tr>
+        <tr><td><code>test_counts</code></td><td>object</td><td>Present on aggregate alerts only.</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <details{% if open_all_sections or is_incident_template %} open{% endif %}>
+    <summary>Incident attributes</summary>
+    <p class="panel-note">Incident lifecycle uses <code>event</code> values (<code>INCIDENT_OPEN</code>, <code>INCIDENT_CLEARED</code>) and stable <code>incident_id</code> across both events.</p>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Type</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>incident_id</code></td><td>int|string</td><td>Primary correlate key for open/cleared incident pair.</td></tr>
+        <tr><td><code>event</code></td><td>string</td><td><code>INCIDENT_OPEN</code> or <code>INCIDENT_CLEARED</code>.</td></tr>
+        <tr><td><code>event_ts</code></td><td>int</td><td>When the event occurred (milliseconds).</td></tr>
+        <tr><td><code>url</code></td><td>string</td><td>NetBeez deep-link to incident details.</td></tr>
+        <tr><td><code>message</code></td><td>string</td><td><code>Incident Cleared</code> for cleared lifecycle events.</td></tr>
+        <tr><td><code>incident_ts</code></td><td>int</td><td>Incident start timestamp (same for open/cleared).</td></tr>
+        <tr><td><code>agent</code>, <code>agent_id</code></td><td>string/int</td><td>Agent incidents only.</td></tr>
+        <tr><td><code>target</code>, <code>target_id</code></td><td>string/int</td><td>Target incidents only.</td></tr>
+        <tr><td><code>wifi_profile</code>, <code>wifi_profile_id</code></td><td>string/int</td><td>WiFi incidents only.</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <details{% if open_all_sections %} open{% endif %}>
+    <summary>Aggregate alerts and <code>test_counts</code></summary>
+    <p class="panel-note">Aggregate payloads expose every alert inside <code>alerts</code> and set <code>is_aggregate=true</code> with <code>aggregate_count</code>.</p>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Shape</th>
+          <th>Example</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Per-test-type map</td>
+          <td><code>{"1": {"success": 0, "fail": 1, ...}}</code></td>
+          <td>Used by agent/target/WiFi aggregate alerts; keys are <code>test_type_id</code>.</td>
+        </tr>
+        <tr>
+          <td>Flat summary map</td>
+          <td><code>{"fail": 2, "warning": 1, "success": 10, ...}</code></td>
+          <td>Used by scheduled test aggregate alerts.</td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th><code>test_type_id</code></th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>1</code></td><td>Ping</td></tr>
+        <tr><td><code>2</code></td><td>DNS</td></tr>
+        <tr><td><code>3</code></td><td>HTTP</td></tr>
+        <tr><td><code>4</code></td><td>Traceroute</td></tr>
+        <tr><td><code>9</code></td><td>Path Analysis</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <details{% if open_all_sections %} open{% endif %}>
+    <summary>Attribute matrix (which fields appear when)</summary>
+    <p class="panel-note"><strong>Legend:</strong> <code>Always</code>, <code>Conditional</code>, <code>Never</code>.</p>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Alert attribute</th>
+          <th>Agent device</th>
+          <th>Agent aggregate</th>
+          <th>Target</th>
+          <th>WiFi</th>
+          <th>Scheduled</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>severity</code>, <code>severity_name</code>, <code>alert_dedup_id</code>, <code>event_type</code>, <code>message</code>, <code>alert_ts</code></td><td>Always</td><td>Always</td><td>Always</td><td>Always</td><td>Always</td></tr>
+        <tr><td><code>agent</code></td><td>Always</td><td>Always</td><td>Always</td><td>Conditional</td><td>Never</td></tr>
+        <tr><td><code>agent_description</code></td><td>Conditional</td><td>Conditional</td><td>Conditional</td><td>Conditional</td><td>Never</td></tr>
+        <tr><td><code>target</code></td><td>Never</td><td>Always</td><td>Always</td><td>Always</td><td>Never</td></tr>
+        <tr><td><code>wifi_profile</code></td><td>Never</td><td>Never</td><td>Never</td><td>Always</td><td>Never</td></tr>
+        <tr><td><code>destination</code></td><td>Always</td><td>Always</td><td>Always</td><td>Always</td><td>Always</td></tr>
+        <tr><td><code>test_type</code></td><td>Always (<code>null</code>)</td><td>Always</td><td>Always</td><td>Always</td><td>Always (<code>null</code>)</td></tr>
+        <tr><td><code>test_counts</code></td><td>Aggregate only</td><td>Aggregate only</td><td>Aggregate only</td><td>Aggregate only</td><td>Aggregate only (flat)</td></tr>
+      </tbody>
+    </table>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Incident attribute</th>
+          <th>Agent incident</th>
+          <th>Target incident</th>
+          <th>WiFi incident</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>incident_id</code>, <code>event</code>, <code>event_ts</code>, <code>url</code>, <code>message</code>, <code>incident_ts</code></td><td>Always</td><td>Always</td><td>Always</td></tr>
+        <tr><td><code>agent</code>, <code>agent_id</code>, <code>agent_description</code></td><td>Always/Conditional</td><td>Never</td><td>Never</td></tr>
+        <tr><td><code>target</code>, <code>target_id</code></td><td>Never</td><td>Always</td><td>Never</td></tr>
+        <tr><td><code>wifi_profile</code>, <code>wifi_profile_id</code></td><td>Never</td><td>Never</td><td>Always</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <details{% if open_all_sections %} open{% endif %}>
+    <summary>Filters and helpers</summary>
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Usage</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>rewrite_url_origin</code></td><td><code>{{ "{{ attributes.url | rewrite_url_origin(staff_sop_url) }}" }}</code></td><td>Rewrites URL origin to another host while preserving path/query.</td></tr>
+      </tbody>
+    </table>
+    <p class="panel-note">Use <code>alert_dedup_id</code> to correlate alert open/clear events, <code>incident_id</code> for incidents, and sort aggregate lists by <code>alert_ts</code> if chronological output is required.</p>
+  </details>
+
+  <details{% if open_all_sections %} open{% endif %}>
+    <summary>Jinja snippets you can copy</summary>
+    <pre><code>{{ "{{ event_type }}" }} / {{ "{{ event_id }}" }}</code></pre>
+    <pre><code>{% raw %}{% if event_type == "ALERT_OPEN" %}Open alert{% elif event_type == "ALERT_CLEARED" %}Cleared alert{% endif %}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% if is_aggregate %}{% for alert in alerts|sort(attribute="attributes.alert_ts") %}{{ alert.attributes.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ attributes.message }}{% endif %}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% if attributes.url %}{{ attributes.url|rewrite_url_origin(staff_sop_url) }}{% endif %}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% set ts = attributes.alert_ts or attributes.event_ts or attributes.incident_ts %}{{ ts }}{% endraw %}</code></pre>
+  </details>
+</div>
