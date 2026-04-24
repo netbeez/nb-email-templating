@@ -20,15 +20,40 @@ Standalone Python (FastAPI + Jinja2) service that receives NetBeez webhook notif
 
 ## Quick start
 
-1. Clone the repo and go to the project root.
-2. Copy the example config and set token + SMTP via env or edit:
+1. Download the project and go to the project root.
+
+   **Git clone** (recommended):
+
+   ```bash
+   git clone https://github.com/netbeez/nb-email-templating.git
+   cd nb-email-templating
+   ```
+
+   **Tarball** (optional, if you prefer not to use Git): download the archive for your branch or tag, then extract and enter the directory (GitHub archives unpack to a folder named `<repo>-<ref>`):
+
+   ```bash
+   curl -fsSL -o nb-email-templating.tar.gz 'https://github.com/netbeez/nb-email-templating/archive/refs/heads/main.tar.gz'
+   tar xzf nb-email-templating.tar.gz
+   cd nb-email-templating-main
+   ```
+
+2. If you run with Docker Compose, create an empty `.env` in the project root so Compose does not fail on the `env_file: .env` entry in `docker-compose.yml` (you can add real variables to this file later):
+
+   ```bash
+   touch .env
+   ```
+
+3. Copy the example config and set token + SMTP via env or edit:
+
    ```bash
    cp config/config.example.yaml config/config.yaml
    export NB_EMAIL_WEBHOOK_TOKEN=your-secret-token
    export SMTP_USERNAME=your-smtp-user
    export SMTP_PASSWORD=your-smtp-password
    ```
-3. Run with Docker (Compose reads a project `.env` if present and passes it into the container; see `docker-compose.yml`):
+
+4. Run with Docker (Compose reads the project `.env` and passes values into the container; see `docker-compose.yml`):
+
    ```bash
    docker compose up -d
    ```
@@ -37,7 +62,7 @@ Standalone Python (FastAPI + Jinja2) service that receives NetBeez webhook notif
    pip install -e .
    uvicorn nb_email_templating.main:app --host 0.0.0.0 --port 8025
    ```
-4. Check health: `GET http://localhost:8025/health`
+5. Check health: `GET http://localhost:8025/health`
 
 ## Configuration
 
