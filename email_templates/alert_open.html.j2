@@ -25,7 +25,7 @@
   {% if attributes.target %}<tr><td class="detail-label">Target</td><td class="detail-value">{{ attributes.target }}</td></tr>{% endif %}
   <tr><td class="detail-label">Destination</td><td class="detail-value">{{ attributes.destination or '—' }}</td></tr>
   {% if attributes.test_type %}<tr><td class="detail-label">Test type</td><td class="detail-value">{{ attributes.test_type }}</td></tr>{% endif %}
-  {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ (attributes.alert_ts / 1000) | int }}</td></tr>{% endif %}
+  {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ attributes.alert_ts | format_ts }}</td></tr>{% endif %}
 </table>
 {% if alerts|length > 1 %}
 <h3 style="margin:24px 0 12px 0;font-size:16px;font-weight:600;color:#1a1a2e;">All alerts in this notification ({{ alerts|length }})</h3>

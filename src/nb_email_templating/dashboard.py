@@ -12,6 +12,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
 from .database import Event, Delivery
+from .jinja_filters import register_format_ts
 from .security import validate_template_name
 
 router = APIRouter()
@@ -20,9 +21,13 @@ import os as _os
 DASHBOARD_TEMPLATES_DIR = Path(_os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(Path(__file__).parent.parent.parent / "dashboard_templates"))
 
 
-def _get_jinja_env():
+def get_dashboard_jinja_env():
+    """Jinja environment for dashboard HTML templates (includes shared filters)."""
     from jinja2 import Environment, FileSystemLoader
-    return Environment(loader=FileSystemLoader(str(DASHBOARD_TEMPLATES_DIR)))
+
+    env = Environment(loader=FileSystemLoader(str(DASHBOARD_TEMPLATES_DIR)))
+    register_format_ts(env)
+    return env
 
 
 def _beezkeeper_webhook_url(request: Request, config) -> str:
@@ -78,7 +83,7 @@ async def _require_auth_csrf(request: Request, csrf: str = Query(None), form_csr
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request, _: bool = Depends(_require_auth)):
-    env = _get_jinja_env()
+    env = get_dashboard_jinja_env()
     config = request.app.state.config
     session_factory = request.app.state.session_factory
     async with session_factory() as session:
@@ -104,7 +109,7 @@ async def events_list(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
 ):
-    env = _get_jinja_env()
+    env = get_dashboard_jinja_env()
     session_factory = request.app.state.session_factory
     async with session_factory() as session:
         result = await session.execute(
@@ -159,7 +164,7 @@ async def retry_event(
 
 @router.get("/config", response_class=HTMLResponse)
 async def config_view(request: Request, _: bool = Depends(_require_auth)):
-    env = _get_jinja_env()
+    env = get_dashboard_jinja_env()
     config = request.app.state.config
     config_str = json.dumps(_redact_config(config), indent=2)
     template = env.get_template("config_view.html.j2")
@@ -170,7 +175,7 @@ async def config_view(request: Request, _: bool = Depends(_require_auth)):
 @router.get("/login")
 async def login(request: Request, token: str | None = Query(None), error: int | None = Query(None)):
     """Show login form, or set session cookie when token is provided."""
-    env = _get_jinja_env()
+    env = get_dashboard_jinja_env()
     config = getattr(request.app.state, "config", None)
     if not config:
         raise HTTPException(status_code=500, detail="Config not loaded")

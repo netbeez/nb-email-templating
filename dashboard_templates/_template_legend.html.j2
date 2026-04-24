@@ -194,6 +194,6 @@
     <pre><code>{% raw %}{% if event_type == "ALERT_OPEN" %}Open alert{% elif event_type == "ALERT_CLEARED" %}Cleared alert{% endif %}{% endraw %}</code></pre>
     <pre><code>{% raw %}{% if is_aggregate %}{% for alert in alerts|sort(attribute="attributes.alert_ts") %}{{ alert.attributes.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ attributes.message }}{% endif %}{% endraw %}</code></pre>
     <pre><code>{% raw %}{% if attributes.url %}{{ attributes.url|rewrite_url_origin(staff_sop_url) }}{% endif %}{% endraw %}</code></pre>
-    <pre><code>{% raw %}{% set ts = attributes.alert_ts or attributes.event_ts or attributes.incident_ts %}{{ ts }}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% set ts = attributes.alert_ts or attributes.event_ts or attributes.incident_ts %}{{ ts|format_ts }}{% endraw %}</code></pre>
   </details>
 </div>

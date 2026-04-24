@@ -21,7 +21,7 @@
   <tr><td class="detail-label">Severity</td><td class="detail-value">{{ attributes.severity_name or attributes.severity or '—' }}</td></tr>
   {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
   {% if attributes.destination %}<tr><td class="detail-label">Destination</td><td class="detail-value">{{ attributes.destination }}</td></tr>{% endif %}
-  {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ (attributes.alert_ts / 1000) | int }}</td></tr>{% endif %}
+  {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ attributes.alert_ts | format_ts }}</td></tr>{% endif %}
 </table>
 {% if alerts|length > 1 %}
 <h3 style="margin:24px 0 12px 0;font-size:16px;font-weight:600;color:#1a1a2e;">All cleared alerts in this notification ({{ alerts|length }})</h3>

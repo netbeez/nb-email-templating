@@ -13,7 +13,7 @@
       <td>{{ ev.event_type }}</td>
       <td>{{ ev.status }}</td>
       <td>{% for d in ev.deliveries %}{{ 'OK' if d.success else 'FAIL' }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-      <td>{{ ev.created_at }}</td>
+      <td>{{ ev.created_at | format_ts }}</td>
       <td>{% if ev.status == 'failed' %}<form method="post" action="/events/{{ ev.id }}/retry" class="inline-form"><button type="submit">Retry</button></form>{% endif %}</td>
     </tr>
     {% endfor %}

@@ -43,7 +43,7 @@
       <td>{{ ev.event_id[:20] }}...</td>
       <td>{{ ev.event_type }}</td>
       <td>{{ ev.status }}</td>
-      <td>{{ ev.created_at }}</td>
+      <td>{{ ev.created_at | format_ts }}</td>
     </tr>
     {% endfor %}
     </tbody>

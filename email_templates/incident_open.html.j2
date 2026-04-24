@@ -22,7 +22,7 @@
   {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
   {% if attributes.test_type %}<tr><td class="detail-label">Test type</td><td class="detail-value">{{ attributes.test_type }}</td></tr>{% endif %}
   {% if attributes.target %}<tr><td class="detail-label">Target</td><td class="detail-value">{{ attributes.target }}</td></tr>{% endif %}
-  {% if attributes.incident_ts %}<tr><td class="detail-label">Started</td><td class="detail-value">{{ (attributes.incident_ts / 1000) | int }}</td></tr>{% endif %}
+  {% if attributes.incident_ts %}<tr><td class="detail-label">Started</td><td class="detail-value">{{ attributes.incident_ts | format_ts }}</td></tr>{% endif %}
 </table>
 {% if attributes.tests is defined and attributes.tests is iterable and attributes.tests is not string %}
 <table class="detail-table" style="margin-top:16px;">

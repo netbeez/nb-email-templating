@@ -11,6 +11,7 @@ from jinja2.exceptions import TemplateSyntaxError
 import yaml
 
 from .config import load_config
+from .dashboard import get_dashboard_jinja_env
 from .renderer import TemplateRenderer
 from .security import validate_template_name
 
@@ -108,18 +109,16 @@ async def _require_auth(request: Request) -> bool:
 
 @router.get("/templates", response_class=HTMLResponse)
 async def template_editor_page(request: Request, _=Depends(_require_auth)):
-    from jinja2 import Environment, FileSystemLoader
     templates_dir = _templates_dir(request)
     names = [f.name for f in templates_dir.glob("*.html.j2")] if templates_dir.exists() else []
-    env = Environment(loader=FileSystemLoader(os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(Path(__file__).parent.parent.parent / "dashboard_templates")))
+    env = get_dashboard_jinja_env()
     template = env.get_template("template_editor.html.j2")
     return HTMLResponse(template.render(template_names=names))
 
 
 @router.get("/templates/legend", response_class=HTMLResponse)
 async def template_legend_page(request: Request, _=Depends(_require_auth)):
-    from jinja2 import Environment, FileSystemLoader
-    env = Environment(loader=FileSystemLoader(os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(Path(__file__).parent.parent.parent / "dashboard_templates")))
+    env = get_dashboard_jinja_env()
     template = env.get_template("template_legend.html.j2")
     return HTMLResponse(template.render(event_type=None))
 
@@ -146,8 +145,7 @@ async def template_edit_page(request: Request, name: str, _=Depends(_require_aut
             recipients = recipients_cfg.model_dump()
         elif isinstance(recipients_cfg, dict):
             recipients = recipients_cfg
-    from jinja2 import Environment, FileSystemLoader
-    env = Environment(loader=FileSystemLoader(os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(Path(__file__).parent.parent.parent / "dashboard_templates")))
+    env = get_dashboard_jinja_env()
     template = env.get_template("template_edit.html.j2")
     return HTMLResponse(template.render(name=name, content=content, event_type=event_type, subject=subject, recipients=recipients))
 

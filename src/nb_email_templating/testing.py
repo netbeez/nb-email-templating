@@ -8,9 +8,10 @@ from html import escape
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from .context import build_render_context
+from .dashboard import get_dashboard_jinja_env
 from .mailer import send_email
 from .parser import parse_webhook_payload
-from .context import build_render_context
 
 router = APIRouter()
 
@@ -77,9 +78,7 @@ def _render_preview_page(subject: str, html: str | None, error: str | None) -> H
 
 @router.get("/test", response_class=HTMLResponse)
 async def test_tools_page(request: Request, _=Depends(_require_auth)):
-    from jinja2 import Environment, FileSystemLoader
-    import os as _os
-    env = Environment(loader=FileSystemLoader(_os.environ.get("DASHBOARD_TEMPLATES_DIR") or str(__import__("pathlib").Path(__file__).parent.parent.parent / "dashboard_templates")))
+    env = get_dashboard_jinja_env()
     return HTMLResponse(env.get_template("test_tools.html.j2").render())
 
 

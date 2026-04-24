@@ -9,6 +9,8 @@ from jinja2 import FileSystemBytecodeCache, FileSystemLoader, TemplateNotFound, 
 from jinja2.exceptions import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 
+from .jinja_filters import register_format_ts
+
 
 DEFAULT_SUBJECT_FALLBACK = "[NetBeez] {event_type} Notification"
 
@@ -55,6 +57,7 @@ class TemplateRenderer:
             auto_reload=False,
         )
         self.env.filters["rewrite_url_origin"] = _rewrite_url_origin_filter
+        register_format_ts(self.env)
 
     def _render_sync(self, template_name: str, context: dict[str, Any]) -> str:
         template = self.env.get_template(template_name)
