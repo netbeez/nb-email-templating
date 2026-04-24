@@ -20,10 +20,15 @@ from .webhook import router as webhook_router, _deliver_event
 from .parser import parse_webhook_payload
 from . import dashboard, template_editor, testing, admin
 
-# Config path from env or default
+# Config path from env or default (only fall back to example for implicit _root paths;
+# never replace an explicit CONFIG_PATH — mounts may appear after the default image layout.)
 _root = Path(__file__).parent.parent.parent
-CONFIG_PATH = os.environ.get("CONFIG_PATH") or str(_root / "config" / "config.yaml")
-if not Path(CONFIG_PATH).exists():
+_default_yaml = _root / "config" / "config.yaml"
+if os.environ.get("CONFIG_PATH"):
+    CONFIG_PATH = os.environ["CONFIG_PATH"]
+elif _default_yaml.exists():
+    CONFIG_PATH = str(_default_yaml)
+else:
     CONFIG_PATH = str(_root / "config" / "config.example.yaml")
 TEMPLATES_DIR = os.environ.get("EMAIL_TEMPLATES_DIR") or str(_root / "email_templates")
 DATA_DIR = os.environ.get("DATA_DIR", str(_root / "data"))
