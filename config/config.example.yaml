@@ -67,7 +67,7 @@ templates:
   INCIDENT_OPEN:
     file: incident_open.html.j2
     active: true
-    subject: "[NB] - Agent Incident Detected{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %} on {{ attributes.agent }}"
+    subject: "{% set incident_source = 'WiFi' if attributes.wifi_profile else ('Target' if attributes.target else 'Agent') %}{% set incident_entity = attributes.wifi_profile or attributes.target or attributes.agent %}[NB] - {{ incident_source }} Incident Detected{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %}{% if incident_entity %} on {{ incident_entity }}{% endif %}"
     recipients:
       to: ["ops@example.com"]
       cc: []
@@ -75,7 +75,7 @@ templates:
   INCIDENT_CLEARED:
     file: incident_cleared.html.j2
     active: true
-    subject: "[NB] - Agent Incident Closed{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %} on {{ attributes.agent }}"
+    subject: "{% set incident_source = 'WiFi' if attributes.wifi_profile else ('Target' if attributes.target else 'Agent') %}{% set incident_entity = attributes.wifi_profile or attributes.target or attributes.agent %}[NB] - {{ incident_source }} Incident Closed{% set tt = (attributes.test_type | default('', true) | lower) %}{% if tt %} for {% if tt == 'http' %}HTTP{% elif tt == 'ping' %}Ping{% elif tt == 'dns' %}DNS{% else %}{{ tt | title }}{% endif %} tests{% endif %}{% if incident_entity %} on {{ incident_entity }}{% endif %}"
     recipients:
       to: ["ops@example.com"]
       cc: []

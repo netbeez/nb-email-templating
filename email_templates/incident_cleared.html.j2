@@ -1,5 +1,5 @@
 {% extends "_base.html.j2" %}
-{% block title %}[NB] Agent Incident Cleared{% endblock %}
+{% block title %}{% set incident_source = 'WiFi' if attributes.wifi_profile else ('Target' if attributes.target else 'Agent') %}[NB] {{ incident_source }} Incident Cleared{% endblock %}
 {% block content %}
 <style>
   .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
