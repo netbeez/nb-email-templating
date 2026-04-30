@@ -30,6 +30,26 @@ def _find_event_type(config: Any, filename: str) -> str | None:
     return None
 
 
+def _write_text_atomic(path: Path, content: str, *, permission_detail: str) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        tmp.write_text(content, encoding="utf-8")
+        os.replace(tmp, path)
+    except PermissionError as e:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        target = e.filename or str(path)
+        raise HTTPException(status_code=403, detail=f"{permission_detail}: {target}") from e
+    except OSError as e:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise HTTPException(status_code=500, detail=f"Failed to save {path.name}: {e}") from e
+
+
 def _update_config_template(config_path: Path, event_type: str, updates: dict[str, Any]) -> None:
     raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     templates = raw.get("templates")
@@ -40,9 +60,11 @@ def _update_config_template(config_path: Path, event_type: str, updates: dict[st
         raise HTTPException(status_code=404, detail=f"Event type {event_type!r} not found in config")
     event.update(updates)
 
-    tmp = config_path.with_suffix(config_path.suffix + ".tmp")
-    tmp.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
-    os.replace(tmp, config_path)
+    _write_text_atomic(
+        config_path,
+        yaml.safe_dump(raw, sort_keys=False),
+        permission_detail="Config file is not writable",
+    )
 
 
 def _update_all_config_templates(config_path: Path, updates: dict[str, Any]) -> list[str]:
@@ -57,9 +79,11 @@ def _update_all_config_templates(config_path: Path, updates: dict[str, Any]) -> 
         event.update(updates)
         applied_to.append(event_type)
 
-    tmp = config_path.with_suffix(config_path.suffix + ".tmp")
-    tmp.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
-    os.replace(tmp, config_path)
+    _write_text_atomic(
+        config_path,
+        yaml.safe_dump(raw, sort_keys=False),
+        permission_detail="Config file is not writable",
+    )
     return applied_to
 
 
@@ -214,9 +238,13 @@ async def save_template(request: Request, name: str, _=Depends(_require_auth)):
     normalized_recipients = None
     if recipients is not None:
         normalized_recipients = _validate_recipients(recipients)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(content, encoding="utf-8")
-    os.replace(tmp, path)
+    current_content = path.read_text(encoding="utf-8") if path.exists() else None
+    if current_content != content:
+        _write_text_atomic(
+            path,
+            content,
+            permission_detail="Template directory is not writable",
+        )
 
     if subject is not None or normalized_recipients is not None:
         config = getattr(request.app.state, "config", None)
