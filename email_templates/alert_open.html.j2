@@ -23,23 +23,10 @@
   <tr><td class="detail-label">Severity</td><td class="detail-value">{{ attributes.severity_name or attributes.severity or '—' }}</td></tr>
   {% if attributes.agent %}<tr><td class="detail-label">Agent</td><td class="detail-value">{{ attributes.agent }}</td></tr>{% endif %}
   {% if attributes.target %}<tr><td class="detail-label">Target</td><td class="detail-value">{{ attributes.target }}</td></tr>{% endif %}
-  <tr><td class="detail-label">Destination</td><td class="detail-value">{{ attributes.destination or '—' }}</td></tr>
+  {% if attributes.destination %}<tr><td class="detail-label">Destination</td><td class="detail-value">{{ attributes.destination or '—' }}</td></tr>{% endif %}
   {% if attributes.test_type %}<tr><td class="detail-label">Test type</td><td class="detail-value">{{ attributes.test_type }}</td></tr>{% endif %}
   {% if attributes.alert_ts %}<tr><td class="detail-label">Time</td><td class="detail-value">{{ attributes.alert_ts | format_ts }}</td></tr>{% endif %}
+  {% if attributes.url %}<tr><td class="detail-label">URL</td><td class="detail-value">{{ attributes.url }}</td></tr>{% endif %}  
+  <tr><td class="detail-label">Template</td><td class="detail-value">alert_open.html.j2</td></tr>
 </table>
-{% if alerts|length > 1 %}
-<h3 style="margin:24px 0 12px 0;font-size:16px;font-weight:600;color:#1a1a2e;">All alerts in this notification ({{ alerts|length }})</h3>
-<table class="detail-table">
-  {% for a in alerts %}
-  <tr>
-    <td class="detail-label" style="width:28%;">#{{ loop.index }}</td>
-    <td class="detail-value" style="text-align:left;">
-      <strong>{{ a.message or '—' }}</strong>
-      {% if a.agent %}<br><span style="color:#6c757d;font-size:14px;">Agent: {{ a.agent }}</span>{% endif %}
-      {% if a.target %}<br><span style="color:#6c757d;font-size:14px;">Target: {{ a.target }}</span>{% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
 {% endblock %}

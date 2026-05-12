@@ -21,13 +21,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td><code>event_type</code></td><td>string</td><td>Examples: <code>ALERT_OPEN</code>, <code>ALERT_CLEARED</code>, <code>INCIDENT_OPEN</code>, <code>INCIDENT_CLEARED</code>.</td></tr>
+        <tr><td><code>event_type</code></td><td>string</td><td>Examples: <code>ALERT_OPEN</code>, <code>ALERT_CLEARED</code>, <code>ALERT_AGGREGATE</code>, <code>INCIDENT_OPEN</code>, <code>INCIDENT_CLEARED</code>.</td></tr>
         <tr><td><code>event_id</code></td><td>string</td><td>Envelope event id from webhook payload.</td></tr>
         <tr><td><code>data_type</code></td><td>string</td><td><code>alert</code> or <code>incident</code>.</td></tr>
         <tr><td><code>attributes</code></td><td>object</td><td>Primary event attributes for this payload.</td></tr>
-        <tr><td><code>alerts</code></td><td>list[object]</td><td>Populated for aggregate alert payloads.</td></tr>
+        <tr><td><code>alerts</code></td><td>list[object]</td><td>One alert for single alert payloads; every array element for aggregate alert payloads. Each aggregate alert keeps its own <code>event_type</code>.</td></tr>
         <tr><td><code>is_aggregate</code></td><td>bool</td><td><code>true</code> when the incoming payload contains <code>data</code> as an array.</td></tr>
         <tr><td><code>aggregate_count</code></td><td>int</td><td>Number of alerts in aggregate payload (defaults to <code>1</code>).</td></tr>
+        <tr><td><code>aggregation_entity_type</code></td><td>string|null</td><td>Aggregate scope from the payload: <code>agent</code>, <code>target</code>, <code>wifi_profile</code>, or <code>scheduled_test</code>.</td></tr>
+        <tr><td><code>aggregation_entity_type_label</code></td><td>string</td><td>Human label for the aggregate scope, e.g. <code>Agent</code> or <code>WiFi Profile</code>.</td></tr>
+        <tr><td><code>aggregation_entity_name</code></td><td>string</td><td>Display name derived from the aggregate scope, e.g. the agent, target, or WiFi profile name.</td></tr>
+        <tr><td><code>incident_entity_type</code></td><td>string|null</td><td>Incident kind: <code>agent</code>, <code>target</code>, or <code>wifi_profile</code>. Derived from which incident entity attribute is present.</td></tr>
+        <tr><td><code>incident_entity_type_label</code></td><td>string</td><td>Human label for incident kind: <code>Agent</code>, <code>Target</code>, <code>WiFi</code>, or <code>Incident</code> when undetermined.</td></tr>
+        <tr><td><code>incident_entity_name</code></td><td>string</td><td>Display name for the incident entity (<code>agent</code>, <code>target</code>, or <code>wifi_profile</code>).</td></tr>
+        <tr><td><code>test_counts</code></td><td>object</td><td>Top-level copy of the aggregate summary from the first alert in the array.</td></tr>
         <tr><td><code>staff_sop_url</code> etc.</td><td>any</td><td>Any additional keys from config <code>template_context</code> are merged in.</td></tr>
       </tbody>
     </table>
@@ -65,6 +72,7 @@
   <details{% if open_all_sections or is_incident_template %} open{% endif %}>
     <summary>Incident attributes</summary>
     <p class="panel-note">Incident lifecycle uses <code>event</code> values (<code>INCIDENT_OPEN</code>, <code>INCIDENT_CLEARED</code>) and stable <code>incident_id</code> across both events.</p>
+    <p class="panel-note">To avoid branching on which entity attribute exists, use the derived top-level keys <code>incident_entity_type</code>, <code>incident_entity_type_label</code>, and <code>incident_entity_name</code> in subjects and body templates.</p>
     <table class="legend-table">
       <thead>
         <tr>
@@ -89,7 +97,7 @@
 
   <details{% if open_all_sections %} open{% endif %}>
     <summary>Aggregate alerts and <code>test_counts</code></summary>
-    <p class="panel-note">Aggregate payloads expose every alert inside <code>alerts</code> and set <code>is_aggregate=true</code> with <code>aggregate_count</code>.</p>
+    <p class="panel-note">Aggregate payloads are routed to <code>ALERT_AGGREGATE</code>, expose every alert inside <code>alerts</code>, and set <code>is_aggregate=true</code> with <code>aggregate_count</code>. Mixed open and cleared alerts should be rendered from each alert's own <code>event_type</code>.</p>
     <table class="legend-table">
       <thead>
         <tr>
@@ -191,8 +199,8 @@
   <details{% if open_all_sections %} open{% endif %}>
     <summary>Jinja snippets you can copy</summary>
     <pre><code>{{ "{{ event_type }}" }} / {{ "{{ event_id }}" }}</code></pre>
-    <pre><code>{% raw %}{% if event_type == "ALERT_OPEN" %}Open alert{% elif event_type == "ALERT_CLEARED" %}Cleared alert{% endif %}{% endraw %}</code></pre>
-    <pre><code>{% raw %}{% if is_aggregate %}{% for alert in alerts|sort(attribute="attributes.alert_ts") %}{{ alert.attributes.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ attributes.message }}{% endif %}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% if event_type == "ALERT_OPEN" %}Open alert{% elif event_type == "ALERT_CLEARED" %}Cleared alert{% elif event_type == "ALERT_AGGREGATE" %}Aggregate alert{% endif %}{% endraw %}</code></pre>
+    <pre><code>{% raw %}{% if is_aggregate %}{% for alert in alerts|sort(attribute="alert_ts") %}{{ alert.event_type }}: {{ alert.message }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ attributes.message }}{% endif %}{% endraw %}</code></pre>
     <pre><code>{% raw %}{% if attributes.url %}{{ attributes.url|rewrite_url_origin(staff_sop_url) }}{% endif %}{% endraw %}</code></pre>
     <pre><code>{% raw %}{% set ts = attributes.alert_ts or attributes.event_ts or attributes.incident_ts %}{{ ts|format_ts }}{% endraw %}</code></pre>
   </details>

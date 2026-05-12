@@ -69,6 +69,7 @@ by the notification type (`device alert`, `alert`, `aggregate alert`, or
     - [Opening](#opening-2)
     - [Cleared](#cleared-5)
   - [Scheduled test aggregate alerts](#scheduled-test-aggregate-alerts)
+  - [`aggregation_entity_type`](#aggregation_entity_type)
   - [`test_counts`](#test_counts)
     - [Per-test-type (agent / target / WiFi profile aggregates)](#per-test-type-agent--target--wifi-profile-aggregates)
     - [Flat (scheduled test aggregates)](#flat-scheduled-test-aggregates)
@@ -193,7 +194,8 @@ the agent's display name and additionally emits `target`, `destination` and
 an agent aggregate even if the underlying test targets a WiFi profile — use a
 [WiFi profile aggregate](#wifi-profile-aggregate-alerts) if you need that.
 
-Each element also carries a `test_counts` summary; see
+Each element also carries `aggregation_entity_type` and a `test_counts`
+summary; see [`aggregation_entity_type`](#aggregation_entity_type) and
 [`test_counts`](#test_counts) below for the format.
 
 ```json
@@ -212,6 +214,7 @@ Each element also carries a `test_counts` summary; see
         "destination": "test.netbeezcloud.net",
         "message": "DNS server returned no results",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "agent",
         "test_counts": {
           "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 6 },
           "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 3 },
@@ -235,6 +238,7 @@ Each element also carries a `test_counts` summary; see
         "destination": "intranet.example.com",
         "message": "HTTP request timed out",
         "test_type": "HttpTest",
+        "aggregation_entity_type": "agent",
         "test_counts": { "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 6 }, "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 3 }, "3": { "success": 0, "fail": 1, "warning": 0, "paused": 0, "unknown": 1 }, "4": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 }, "9": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 2 } },
         "alert_ts": 1742303500112
       }
@@ -252,6 +256,7 @@ Each element also carries a `test_counts` summary; see
         "destination": "test.netbeezcloud.net",
         "message": "Target success",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "agent",
         "test_counts": { "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 6 }, "2": { "success": 1, "fail": 0, "warning": 0, "paused": 0, "unknown": 2 }, "3": { "success": 0, "fail": 1, "warning": 0, "paused": 0, "unknown": 1 }, "4": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 }, "9": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 2 } },
         "alert_ts": 1742303620450
       }
@@ -391,8 +396,10 @@ Emitted when the UI requests an aggregated notification for a specific
 target. `type` is `"alert"`, envelope `data` is an **array**.
 
 Because the envelope is scoped to a target (not an agent), the `agent`
-attribute is **omitted** from each element. Each element carries a
-`test_counts` summary; see [`test_counts`](#test_counts) below.
+attribute is **omitted** from each element. Each element carries
+`aggregation_entity_type: "target"` and a `test_counts` summary; see
+[`aggregation_entity_type`](#aggregation_entity_type) and
+[`test_counts`](#test_counts) below.
 
 ```json
 {
@@ -409,6 +416,7 @@ attribute is **omitted** from each element. Each element carries a
         "destination": "test.netbeezcloud.net",
         "message": "DNS server returned no results",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "target",
         "test_counts": {
           "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 10 },
           "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 10 },
@@ -431,6 +439,7 @@ attribute is **omitted** from each element. Each element carries a
         "destination": "test.netbeezcloud.net",
         "message": "Target success",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "target",
         "test_counts": { "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 10 }, "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 10 }, "3": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 10 }, "4": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 }, "9": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 } },
         "alert_ts": 1776360936266
       }
@@ -564,6 +573,7 @@ profile. `type` is `"alert"`, envelope `data` is an **array**.
         "destination": "test.netbeezcloud.net",
         "message": "WiFi target unreachable",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "wifi_profile",
         "test_counts": {
           "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 11 },
           "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 6 },
@@ -586,6 +596,7 @@ profile. `type` is `"alert"`, envelope `data` is an **array**.
         "destination": "test.netbeezcloud.net",
         "message": "WiFi target reachable",
         "test_type": "DnsTest",
+        "aggregation_entity_type": "wifi_profile",
         "test_counts": { "1": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 11 }, "2": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 6 }, "3": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 3 }, "4": { "success": 0, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 } },
         "alert_ts": 1776360936292
       }
@@ -706,7 +717,10 @@ Emitted when the UI requests an aggregated notification for a scheduled
 test. `type` is `"alert"`, envelope `data` is an **array**.
 
 The `test_counts` summary on scheduled test aggregates uses a **flat** key
-set (not per-test-type). See [`test_counts`](#test_counts) below.
+set (not per-test-type). Each element carries
+`aggregation_entity_type: "scheduled_test"`. See
+[`aggregation_entity_type`](#aggregation_entity_type) and
+[`test_counts`](#test_counts) below.
 
 ```json
 {
@@ -722,6 +736,7 @@ set (not per-test-type). See [`test_counts`](#test_counts) below.
         "destination": "",
         "message": "Scheduled test failure",
         "test_type": null,
+        "aggregation_entity_type": "scheduled_test",
         "test_counts": {
           "fail": 2,
           "warning": 1,
@@ -744,6 +759,7 @@ set (not per-test-type). See [`test_counts`](#test_counts) below.
         "destination": "",
         "message": "Scheduled test recovered",
         "test_type": null,
+        "aggregation_entity_type": "scheduled_test",
         "test_counts": {
           "fail": 2,
           "warning": 1,
@@ -761,9 +777,25 @@ set (not per-test-type). See [`test_counts`](#test_counts) below.
 
 ---
 
+## `aggregation_entity_type`
+
+`aggregation_entity_type` appears only on aggregate alert elements. It tells
+consumers which entity the whole aggregate table is scoped to, so renderers can
+choose the correct columns and interpret `test_counts` without inferring from
+which display-name attributes are present.
+
+Possible values:
+
+| Value              | Aggregate context                                | `test_counts` shape |
+|--------------------|--------------------------------------------------|---------------------|
+| `"agent"`          | Tests running from one agent                     | Per-test-type       |
+| `"target"`         | Tests targeting one NetBeez target               | Per-test-type       |
+| `"wifi_profile"`   | Tests scoped to one WiFi profile                 | Per-test-type       |
+| `"scheduled_test"` | Runs of one scheduled test template              | Flat                |
+
 ## `test_counts`
 
-`test_counts` appears only on aggregate alert elements. It summarises the
+`test_counts` appears only on aggregate alert elements. It summarizes the
 count of tests in each state at the time the aggregate was generated.
 
 Two shapes exist depending on the aggregate case:
@@ -815,6 +847,7 @@ always, `○` = conditional, `—` = never.
 | `wifi_profile`                                                                     | —                  | —                                | —            | ●                  | —                    |
 | `destination`                                                                      | ● (may be `null`)  | ●                                | ●            | ●                  | ● (may be `""`)      |
 | `test_type`                                                                        | ● (`null`)         | ●                                | ●            | ●                  | ● (`null`)           |
+| `aggregation_entity_type`                                                          | —                  | ●                                | ○ (aggregate only) | ○ (aggregate only) | ○ (aggregate only)   |
 | `test_counts`                                                                      | ○ (aggregate only) | ○ (aggregate only)               | ○ (aggregate only) | ○ (aggregate only) | ○ (aggregate only, flat shape) |
 
 For incidents:
@@ -836,6 +869,8 @@ For incidents:
   incident.
 - **Ordering**: events within a single aggregate payload are not guaranteed
   to be ordered. If you need chronological order, sort by `alert_ts`.
+- **Aggregate tables**: use `aggregation_entity_type` to choose the table
+  layout. Use `test_counts` as the state summary for that aggregate entity.
 - **Optional attributes**: several fields are conditionally present; see the
   matrix above. Consumers should treat missing attributes as "not
   applicable" rather than an error.

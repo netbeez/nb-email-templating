@@ -333,6 +333,8 @@ async def preview_template(request: Request, name: str, _=Depends(_require_auth)
         raise HTTPException(status_code=400, detail=str(e))
     cfg = request.app.state.config
     context = build_render_context(parsed, cfg.template_context)
-    html, err = await renderer.render_body(context["event_type"], context)
-    subject = renderer.render_subject(context["event_type"], context)
+    render_event_type = _find_event_type(cfg, name) or context["event_type"]
+    context["event_type"] = render_event_type
+    html, err = await renderer.render_body(render_event_type, context)
+    subject = renderer.render_subject(render_event_type, context)
     return {"html": html or "", "subject": subject, "error": err}

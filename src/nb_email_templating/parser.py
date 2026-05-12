@@ -56,11 +56,73 @@ def _normalize_attributes(raw: dict[str, Any]) -> dict[str, Any]:
     return dict(raw) if isinstance(raw, dict) else {}
 
 
+def _aggregate_entity_type_label(entity_type: str | None) -> str:
+    labels = {
+        "agent": "Agent",
+        "target": "Target",
+        "wifi_profile": "WiFi Profile",
+        "scheduled_test": "Scheduled Test",
+    }
+    return labels.get((entity_type or "").lower(), "Aggregate")
+
+
+def _aggregate_entity_name(attrs: dict[str, Any], entity_type: str | None) -> str:
+    entity_type = (entity_type or "").lower()
+    if entity_type == "agent":
+        return str(attrs.get("agent") or "")
+    if entity_type == "target":
+        return str(attrs.get("target") or "")
+    if entity_type == "wifi_profile":
+        return str(attrs.get("wifi_profile") or "")
+    if entity_type == "scheduled_test":
+        return str(attrs.get("destination") or attrs.get("message") or "")
+    return str(attrs.get("agent") or attrs.get("target") or attrs.get("wifi_profile") or attrs.get("destination") or "")
+
+
+def _aggregate_metadata(attrs: dict[str, Any]) -> dict[str, Any]:
+    entity_type = attrs.get("aggregation_entity_type")
+    entity_label = _aggregate_entity_type_label(entity_type)
+    entity_name = _aggregate_entity_name(attrs, entity_type)
+    test_counts = attrs.get("test_counts") or {}
+    return {
+        "aggregation_entity_type": entity_type,
+        "aggregation_entity_type_label": entity_label,
+        "aggregation_entity_name": entity_name,
+        "aggregate_entity_type_label": entity_label,
+        "aggregate_entity_name": entity_name,
+        "test_counts": test_counts,
+    }
+
+
+def _incident_metadata(attrs: dict[str, Any]) -> dict[str, Any]:
+    if attrs.get("wifi_profile"):
+        entity_type = "wifi_profile"
+        entity_label = "WiFi"
+        entity_name = str(attrs.get("wifi_profile") or "")
+    elif attrs.get("target"):
+        entity_type = "target"
+        entity_label = "Target"
+        entity_name = str(attrs.get("target") or "")
+    elif attrs.get("agent"):
+        entity_type = "agent"
+        entity_label = "Agent"
+        entity_name = str(attrs.get("agent") or "")
+    else:
+        entity_type = None
+        entity_label = "Incident"
+        entity_name = ""
+    return {
+        "incident_entity_type": entity_type,
+        "incident_entity_type_label": entity_label,
+        "incident_entity_name": entity_name,
+    }
+
+
 def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
     """
     Parse JSON:API payload and return normalized structure for rendering.
     Returns dict with: event_id, event_type, data_type, attributes, alerts (list for template),
-    is_aggregate (True when data was an array with more than one alert), aggregate_count.
+    is_aggregate (True when data was an array), aggregate_count.
     For single alert/incident: alerts has one element (attributes-style).
     For aggregate alerts: alerts is list of attribute dicts; attributes mirrors the first alert;
     event_id is hash of sorted ids.
@@ -75,7 +137,6 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("Payload 'data' array is empty")
         ids = []
         alerts_list = []
-        event_type: str | None = None
         for item in data:
             if not isinstance(item, dict):
                 raise ValueError("Aggregate data item is not an object")
@@ -85,20 +146,20 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             ids.append(str(id_val))
             attrs = _normalize_attributes(item.get("attributes") or {})
             et = attrs.get("event_type") or "ALERT_OPEN"
-            if event_type is None:
-                event_type = et
+            attrs.setdefault("event_type", et)
             alerts_list.append({"id": id_val, "attributes": attrs, "event_type": et})
-        event_type = event_type or "ALERT_OPEN"
         event_id = hashlib.sha256("|".join(sorted(ids)).encode()).hexdigest()
         n = len(alerts_list)
+        first_attrs = alerts_list[0]["attributes"]
         return {
             "event_id": event_id,
-            "event_type": event_type,
+            "event_type": "ALERT_AGGREGATE",
             "data_type": "alert",
-            "attributes": alerts_list[0]["attributes"],
+            "attributes": first_attrs,
             "alerts": [a["attributes"] for a in alerts_list],
-            "is_aggregate": n > 1,
+            "is_aggregate": True,
             "aggregate_count": n,
+            **_aggregate_metadata(first_attrs),
         }
 
     # Single object
@@ -132,5 +193,6 @@ def parse_webhook_payload(body: dict[str, Any]) -> dict[str, Any]:
             "alerts": [attributes],
             "is_aggregate": False,
             "aggregate_count": 1,
+            **_incident_metadata(attributes),
         }
     raise ValueError(f"Unknown data type: {data_type}")

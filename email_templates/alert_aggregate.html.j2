@@ -1,0 +1,97 @@
+{% extends "_base.html.j2" %}
+{% block title %}[NB] {{ aggregation_entity_type_label }} Aggregate Alert{% if aggregation_entity_name %}: {{ aggregation_entity_name }}{% endif %}{% endblock %}
+{% block content %}
+<style>
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .badge-aggregate { background-color: #fff3cd; color: #856404; }
+  .detail-table { width: 100%; border-collapse: collapse; }
+  .detail-table th { padding: 9px 8px; border-bottom: 1px solid #dfe3e6; color: #495057; font-size: 12px; text-align: left; }
+  .detail-table td { padding: 10px 8px; border-bottom: 1px solid #e9ecef; vertical-align: top; color: #1a1a2e; }
+  .detail-table tr:last-child td { border-bottom: none; }
+  .detail-label { font-weight: 500; color: #6c757d; width: 40%; }
+  .summary-box { background-color: #fff8f0; border-left: 4px solid #e67e22; padding: 14px 16px; margin-bottom: 20px; }
+  .muted { color: #6c757d; font-size: 13px; }
+</style>
+<span class="badge badge-aggregate">Aggregate Alert</span>
+<h2>{{ aggregation_entity_type_label }} aggregate{% if aggregation_entity_name %}: {{ aggregation_entity_name }}{% endif %}</h2>
+<div class="summary-box">
+  <p style="margin:0;font-weight:500;color:#1a1a2e;">{{ aggregate_count }} alert{% if aggregate_count != 1 %}s{% endif %} included in this notification.</p>
+</div>
+
+<table class="detail-table" role="presentation">
+  <tr><td class="detail-label">Entity type</td><td>{{ aggregation_entity_type_label }}</td></tr>
+  {% if aggregation_entity_name %}<tr><td class="detail-label">Entity name</td><td>{{ aggregation_entity_name }}</td></tr>{% endif %}
+  <tr><td class="detail-label">Template</td><td>alert_aggregate.html.j2</td></tr>
+</table>
+
+{% if test_counts %}
+<h3 style="margin:24px 0 10px 0;font-size:16px;font-weight:600;color:#1a1a2e;">Test counts</h3>
+<table class="detail-table">
+  <thead>
+    <tr>
+      <th>Scope</th>
+      <th>Success</th>
+      <th>Fail</th>
+      <th>Warning</th>
+      <th>Paused</th>
+      <th>Unknown</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for count_key, count_value in test_counts.items() %}
+    {% if count_value is mapping %}
+    <tr>
+      <td>{% if count_key == '1' %}Ping{% elif count_key == '2' %}DNS{% elif count_key == '3' %}HTTP{% elif count_key == '4' %}Traceroute{% elif count_key == '9' %}Path Analysis{% else %}{{ count_key }}{% endif %}</td>
+      <td>{{ count_value.success | default(0, true) }}</td>
+      <td>{{ count_value.fail | default(0, true) }}</td>
+      <td>{{ count_value.warning | default(0, true) }}</td>
+      <td>{{ count_value.paused | default(0, true) }}</td>
+      <td>{{ count_value.unknown | default(0, true) }}</td>
+    </tr>
+    {% endif %}
+  {% endfor %}
+  {% if aggregation_entity_type == 'scheduled_test' %}
+    <tr>
+      <td>Scheduled Test</td>
+      <td>{{ test_counts.success | default(0, true) }}</td>
+      <td>{{ test_counts.fail | default(0, true) }}</td>
+      <td>{{ test_counts.warning | default(0, true) }}</td>
+      <td>{{ test_counts.paused | default(0, true) }}</td>
+      <td>{{ test_counts.unknown | default(0, true) }}</td>
+    </tr>
+  {% endif %}
+  </tbody>
+</table>
+{% endif %}
+
+<h3 style="margin:24px 0 10px 0;font-size:16px;font-weight:600;color:#1a1a2e;">Alerts</h3>
+<table class="detail-table">
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Message</th>
+      <th>Entity</th>
+      <th>Test</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for a in alerts %}
+    <tr>
+      <td>{% if a.event_type == 'ALERT_CLEARED' %}Cleared{% else %}Open{% endif %}</td>
+      <td>{{ a.severity_name or a.severity or '&mdash;' }}</td>
+      <td>{{ a.message or '&mdash;' }}</td>
+      <td>
+        {% if a.agent %}<strong>Agent:</strong> {{ a.agent }}<br>{% endif %}
+        {% if a.target %}<strong>Target:</strong> {{ a.target }}<br>{% endif %}
+        {% if a.wifi_profile %}<strong>WiFi:</strong> {{ a.wifi_profile }}<br>{% endif %}
+        {% if a.destination %}<span class="muted">{{ a.destination }}</span>{% endif %}
+      </td>
+      <td>{{ a.test_type or '&mdash;' }}</td>
+      <td>{% if a.alert_ts %}{{ a.alert_ts | format_ts }}{% else %}&mdash;{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -16,6 +16,7 @@
     <label>Event type: <select id="event_type" name="event_type">
       <option value="ALERT_OPEN">ALERT_OPEN</option>
       <option value="ALERT_CLEARED">ALERT_CLEARED</option>
+      <option value="ALERT_AGGREGATE">ALERT_AGGREGATE</option>
       <option value="INCIDENT_OPEN">INCIDENT_OPEN</option>
       <option value="INCIDENT_CLEARED">INCIDENT_CLEARED</option>
     </select></label>
@@ -82,6 +83,79 @@
       "alert_ts": 1711629600000
     }
   }
+}`,
+      ALERT_AGGREGATE: `{
+  "data": [
+    {
+      "id": "test-agg-001",
+      "type": "alert",
+      "attributes": {
+        "event_type": "ALERT_OPEN",
+        "severity": 1,
+        "severity_name": "alert",
+        "alert_dedup_id": 9001,
+        "agent": "NYC Agent 1",
+        "agent_description": "New York Office",
+        "target": "api.example.com",
+        "destination": "https://api.example.com/health",
+        "test_type": "HttpTest",
+        "aggregation_entity_type": "agent",
+        "message": "HTTP request timed out",
+        "test_counts": {
+          "1": { "success": 5, "fail": 1, "warning": 0, "paused": 0, "unknown": 0 },
+          "2": { "success": 3, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 },
+          "3": { "success": 0, "fail": 2, "warning": 0, "paused": 0, "unknown": 0 }
+        },
+        "alert_ts": 1711626000000
+      }
+    },
+    {
+      "id": "test-agg-002",
+      "type": "alert",
+      "attributes": {
+        "event_type": "ALERT_CLEARED",
+        "severity": 6,
+        "severity_name": "informational",
+        "alert_dedup_id": 9002,
+        "agent": "NYC Agent 1",
+        "agent_description": "New York Office",
+        "target": "Corporate DNS",
+        "destination": "8.8.8.8",
+        "test_type": "DnsTest",
+        "aggregation_entity_type": "agent",
+        "message": "DNS lookups succeeding",
+        "test_counts": {
+          "1": { "success": 5, "fail": 1, "warning": 0, "paused": 0, "unknown": 0 },
+          "2": { "success": 3, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 },
+          "3": { "success": 0, "fail": 2, "warning": 0, "paused": 0, "unknown": 0 }
+        },
+        "alert_ts": 1711626060000
+      }
+    },
+    {
+      "id": "test-agg-003",
+      "type": "alert",
+      "attributes": {
+        "event_type": "ALERT_OPEN",
+        "severity": 3,
+        "severity_name": "error",
+        "alert_dedup_id": 9003,
+        "agent": "NYC Agent 1",
+        "agent_description": "New York Office",
+        "target": "Core router",
+        "destination": "10.0.0.1",
+        "test_type": "PingTest",
+        "aggregation_entity_type": "agent",
+        "message": "Ping timeout to 10.0.0.1",
+        "test_counts": {
+          "1": { "success": 5, "fail": 1, "warning": 0, "paused": 0, "unknown": 0 },
+          "2": { "success": 3, "fail": 0, "warning": 0, "paused": 0, "unknown": 0 },
+          "3": { "success": 0, "fail": 2, "warning": 0, "paused": 0, "unknown": 0 }
+        },
+        "alert_ts": 1711626120000
+      }
+    }
+  ]
 }`,
       INCIDENT_OPEN: `{
   "data": {

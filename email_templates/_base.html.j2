@@ -22,21 +22,19 @@
       background-color: #f0f2f5;
       -webkit-font-smoothing: antialiased;
     }
+    table {
+      border-collapse: collapse;
+    }
     .wrapper {
       width: 100%;
       background-color: #f0f2f5;
-      padding: 32px 16px;
     }
     .container {
-      max-width: 560px;
-      margin: 0 auto;
+      width: 560px;
       background-color: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     }
     .header {
-      background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+      background-color: #16213e;
       color: #ffffff;
       padding: 24px 28px;
       text-align: left;
@@ -72,25 +70,35 @@
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <div class="header-brand">NetBeez</div>
-        <div class="header-tagline">Network monitoring &amp; alerting</div>
-      </div>
-      <div class="content">
-        {% block content %}{% endblock %}
-      </div>
-      <div class="footer">
-        <p>This is an automated notification from NetBeez. You received this because you are subscribed to alert or incident notifications.</p>
-        {% if netbeez_dashboard_url %}
-        <p style="margin-top:12px;">View the Dashboard at <a href="{{ netbeez_dashboard_url }}">{{ netbeez_dashboard_url }}</a></p>
-        {% endif %}
-        {% if staff_sop_url %}
-        <p style="margin-top:12px;"><a href="{{ staff_sop_url }}">Staff troubleshooting (SOP)</a></p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+  <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" class="container" width="560" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="header">
+              <div class="header-brand">NetBeez</div>
+              <div class="header-tagline">Network monitoring &amp; alerting</div>
+            </td>
+          </tr>
+          <tr>
+            <td class="content">
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+          <tr>
+            <td class="footer">
+              <p>This is an automated notification from NetBeez. You received this because you are subscribed to alert or incident notifications.</p>
+              {% if netbeez_dashboard_url %}
+              <p style="margin-top:12px;">View the Dashboard at <a href="{{ netbeez_dashboard_url }}">{{ netbeez_dashboard_url }}</a></p>
+              {% endif %}
+              {% if staff_sop_url %}
+              <p style="margin-top:12px;"><a href="{{ staff_sop_url }}">Staff troubleshooting (SOP)</a></p>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

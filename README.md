@@ -104,7 +104,7 @@ Payloads follow JSON:API from nb-api:
 - **Aggregate alerts**: `{ "data": [ { "id", "type": "alert", "attributes": { ... } }, ... ] }`
 - **Incident**: `{ "data": { "id", "type": "incident", "attributes": { "event", "message", "url", "incident_ts", ... } } }`
 
-Templates receive `event_type`, `event_id`, `data_type`, `attributes`, and `alerts` (list; one item for single alert/incident). For aggregate alert payloads (`data` as an array), `attributes` matches the first alert, `aggregate_count` is the array length, and `is_aggregate` is true when more than one alert is present. Keys from `template_context` in config are merged into the same context. All `*_ts` fields are milliseconds since epoch.
+Templates receive `event_type`, `event_id`, `data_type`, `attributes`, and `alerts` (list; one item for single alert/incident). Aggregate alert payloads (`data` as an array) are routed to `ALERT_AGGREGATE`; `attributes` matches the first alert, `aggregate_count` is the array length, `is_aggregate` is true, and each item in `alerts` keeps its own lifecycle `event_type` (`ALERT_OPEN` or `ALERT_CLEARED`). Aggregate templates also receive `aggregation_entity_type`, `aggregation_entity_type_label`, `aggregation_entity_name`, and top-level `test_counts` derived from the first alert. Keys from `template_context` in config are merged into the same context. All `*_ts` fields are milliseconds since epoch.
 
 Incident templates can render a **tests** table when `attributes.tests` is present and is a list (shape depends on your NetBeez incident serializer; if the webhook does not include that array, only the summary rows and message will appear).
 
