@@ -100,7 +100,7 @@ class TestToolsConfig(BaseModel):
 
 
 class LoggingConfig(BaseModel):
-    path: str = "/var/log/nb-email-templating"
+    path: str = "/app/logs"
     max_bytes: int = 10485760
     backup_count: int = 5
     level: str = "INFO"
